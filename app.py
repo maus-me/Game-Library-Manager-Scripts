@@ -37,6 +37,12 @@ def rename_folders():
             # Remove any remaining underscores (might not be needed?)
             new_name = new_name.replace('_', ' ')
 
+            # Capitalize the first letter of each word except for words between ()
+            new_name = ' '.join(
+                word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
+                new_name.split())
+
+
             os.rename(os.path.join(game_path, folder), os.path.join(game_path, new_name))
             logger.info(f'Renamed folder: {folder} to {new_name}')
 
