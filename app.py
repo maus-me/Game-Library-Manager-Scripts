@@ -31,8 +31,8 @@ def rename_folders():
             # Do the renaming
             new_name = folder
 
-            new_name = new_name.replace('_gog', '(GOG)')
-            new_name = new_name.replace('_windows', '(Windows)')
+            new_name = new_name.replace('_gog', f'{tag("GOG")}')
+            new_name = new_name.replace('_windows', f'{tag("Windows")}')
 
             # Remove any remaining underscores (might not be needed?)
             new_name = new_name.replace('_', ' ')
@@ -42,6 +42,13 @@ def rename_folders():
 
     logger.info("Renaming completed.")
 
+
+def tag(value):
+    """
+    Function to apply tag to folder name consistently based on value passed to function.
+    """
+    if value:
+        return f" ({value})"
 
 # Search through folders for .txt files and remove them
 def cleanup_folders():
