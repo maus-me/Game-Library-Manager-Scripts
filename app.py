@@ -29,8 +29,9 @@ def rename_folders():
     for folder in os.listdir(game_path):
         if os.path.isdir(os.path.join(game_path, folder)):
             # Do the renaming
-            new_name = folder.replace('_gog_', '(GOG)')
-            new_name = new_name.replace('_windows_', '(Windows)')
+            new_name = folder.replace('_gog', '(GOG)')
+            new_name = new_name.replace('_windows', '(Windows)')
+
             # Remove any remaining underscores (might not be needed?)
             new_name = new_name.replace('_', ' ')
 
