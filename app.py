@@ -9,6 +9,7 @@ setup_logging()
 import os
 import logging
 import configparser
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +22,30 @@ if config_parser.read("config_hidden.cfg", encoding="utf-8") == []:
 
 # Variable for the game path
 game_path = config_parser.get("admin", "game_library_root_path")
+torrent_path = config_parser.get("admin", "torrents_completed_root_path")
 
+
+# Move completed torrents to the game library root path
+def move_completed_torrents():
+    logger.info("Starting to move completed torrents...")
+    for torrent in os.listdir(torrent_path):
+        torrent_file = os.path.join(torrent_path, torrent)
+        if os.path.isfile(torrent_file):
+            # Move the torrent file to the game library root path
+            destination = os.path.join(game_path, torrent)
+            try:
+                subprocess.run(['mv', torrent_file, destination], check=True)
+                logger.info(f'Moved {torrent} to {game_path}')
+            except subprocess.CalledProcessError as e:
+                logger.error(f'Error moving {torrent}: {e}')
+
+    logger.info("Completed moving torrents.")
 
 # For each folder in the current directory remove the part of the foldername
 def rename_folders():
     logger.info("Starting to rename folders...")
-    for folder in os.listdir(game_path):
-        if os.path.isdir(os.path.join(game_path, folder)):
+    for folder in os.listdir(torrent_path):
+        if os.path.isdir(os.path.join(torrent_path, folder)):
             # Do the renaming
             new_name = folder
 
@@ -42,8 +60,7 @@ def rename_folders():
                 word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
                 new_name.split())
 
-
-            os.rename(os.path.join(game_path, folder), os.path.join(game_path, new_name))
+            os.rename(os.path.join(torrent_path, folder), os.path.join(torrent_path, new_name))
             logger.info(f'Renamed folder: {folder} to {new_name}')
 
     logger.info("Renaming completed.")
@@ -59,8 +76,8 @@ def tag(value):
 # Search through folders for .txt files and remove them
 def cleanup_folders():
     logger.info("Starting to clean up folders...")
-    for folder in os.listdir(game_path):
-        folder_path = os.path.join(game_path, folder)
+    for folder in os.listdir(torrent_path):
+        folder_path = os.path.join(torrent_path, folder)
         if os.path.isdir(folder_path):
             for file in os.listdir(folder_path):
                 if file.endswith('gog-games.to.txt'):
@@ -74,9 +91,11 @@ def cleanup_folders():
 # Main function to execute the renaming
 def main():
     logging.basicConfig(filename='logs/logs.log', level=logging.INFO)
+    logger.info("Starting the application...")
 
     rename_folders()
     cleanup_folders()
+    move_completed_torrents()
 
 
 if __name__ == "__main__":
