@@ -35,9 +35,9 @@ def move_completed_torrents():
             destination = os.path.join(game_path, folder)
             try:
                 subprocess.run(['mv', source, destination], check=True)
-                logger.info(f'Moved {folder} to {game_path}')
+                logger.info(f'Moved {source} to {destination}')
             except subprocess.CalledProcessError as e:
-                logger.error(f'Error moving {folder}: {e}')
+                logger.error(f'Error moving {source}: {e}')
 
     logger.info("Completed moving torrents.")
 
