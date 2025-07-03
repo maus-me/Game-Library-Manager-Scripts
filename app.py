@@ -28,16 +28,16 @@ torrent_path = config_parser.get("admin", "torrents_completed_root_path")
 # Move completed torrents to the game library root path
 def move_completed_torrents():
     logger.info("Starting to move completed torrents...")
-    for torrent in os.listdir(torrent_path):
-        torrent_file = os.path.join(torrent_path, torrent)
-        if os.path.isfile(torrent_file):
+    for folder in os.listdir(torrent_path):
+        source = os.path.join(torrent_path, folder)
+        if os.path.isdir(source):
             # Move the torrent file to the game library root path
-            destination = os.path.join(game_path, torrent)
+            destination = os.path.join(game_path, folder)
             try:
-                subprocess.run(['mv', torrent_file, destination], check=True)
-                logger.info(f'Moved {torrent} to {game_path}')
+                subprocess.run(['mv', source, destination], check=True)
+                logger.info(f'Moved {folder} to {game_path}')
             except subprocess.CalledProcessError as e:
-                logger.error(f'Error moving {torrent}: {e}')
+                logger.error(f'Error moving {folder}: {e}')
 
     logger.info("Completed moving torrents.")
 
