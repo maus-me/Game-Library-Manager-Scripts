@@ -39,11 +39,27 @@ def rename_folders():
     logger.info("Renaming completed.")
 
 
+# Search through folders for .txt files and remove them
+def cleanup_folders():
+    logger.info("Starting to clean up folders...")
+    for folder in os.listdir(game_path):
+        folder_path = os.path.join(game_path, folder)
+        if os.path.isdir(folder_path):
+            for file in os.listdir(folder_path):
+                if file.endswith('gog-games.to.txt'):
+                    file_path = os.path.join(folder_path, file)
+                    os.remove(file_path)
+                    logger.info(f'Removed file: {file} from folder: {folder}')
+
+    logger.info("Cleanup completed.")
+
+
 # Main function to execute the renaming
 def main():
     logging.basicConfig(filename='logs/logs.log', level=logging.INFO)
 
     rename_folders()
+    cleanup_folders()
 
 
 if __name__ == "__main__":
