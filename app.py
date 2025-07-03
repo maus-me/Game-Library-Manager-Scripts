@@ -32,7 +32,7 @@ def rename_folders():
             new_name = folder.replace('_gog_', '(GOG)')
             new_name = new_name.replace('_windows_', '(Windows)')
             # Remove any remaining underscores (might not be needed?)
-            # new_name = new_name.replace('_', ' ')
+            new_name = new_name.replace('_', ' ')
 
             os.rename(os.path.join(game_path, folder), os.path.join(game_path, new_name))
             logger.info(f'Renamed folder: {folder} to {new_name}')
