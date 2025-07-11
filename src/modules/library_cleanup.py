@@ -18,6 +18,7 @@ def post_library_cleanup():
 
     # Remove unnecessary files
     remove_extras()
+    remove_empty()
 
     logger.info("Post-library cleanup completed.")
 
@@ -55,3 +56,24 @@ def remove_extras():
                         logger.error(f'Error removing file {file_path}: {e}')
 
     logger.info("Removal of unnecessary files completed.")
+
+
+def remove_empty():
+    """
+    Remove empty directories in the game library root path.
+    :return:
+    """
+    logger.info("Removing empty directories...")
+
+    for folder in os.listdir(game_path):
+        folder_path = os.path.join(game_path, folder)
+        if os.path.isdir(folder_path):
+            # Check if the directory is empty
+            if not os.listdir(folder_path):
+                try:
+                    os.rmdir(folder_path)
+                    logger.info(f'Removed empty directory: {folder_path}')
+                except OSError as e:
+                    logger.error(f'Error removing empty directory {folder_path}: {e}')
+
+    logger.info("Empty directory removal completed.")
