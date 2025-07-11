@@ -10,11 +10,40 @@ import logging
 import os
 import subprocess
 
+import qbittorrentapi
+
 # Load modules
 from src.modules.config_parse import *
 
 logger = logging.getLogger(__name__)
 
+qbt_client = qbittorrentapi.Client(**conn_info)
+
+
+def auth_validation():
+    """
+    Test Authentication with qBittorrent and log the app version and web API version.
+    :return:
+    """
+    try:
+        qbt_client.auth_log_in()
+
+        logger.info(f"qBittorrent App Version: {qbt_client.app.version}")
+        logger.info(f"qBittorrent Web API: {qbt_client.app.web_api_version}")
+
+    except qbittorrentapi.LoginFailed as e:
+        logger.error(f"qBittorrent Login failed: {e}")
+        exit(1)
+
+
+def test():
+    """
+    Initial testing to see if we can retrieve torrents in a specific category that are done seeding.
+    :return:
+    """
+    # Filter for torrents in the specific category that are done seeding.
+    for torrent in qbt_client.torrents_info(category=qbit_category, limit=None, status_filter='completed'):
+        logger.info(f'Torrent: {torrent.name} | State: {torrent.state} | Category: {torrent.category}')
 
 def torrent_manager():
     """
@@ -22,8 +51,11 @@ def torrent_manager():
     :return:
     """
     logger.info("Starting torrent manager...")
-    rename_folders()
-    move_completed_torrents()
+
+    auth_validation()
+    test()
+    # rename_folders()
+    # move_completed_torrents()
     logger.info("Torrent management completed.")
 
 

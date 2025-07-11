@@ -11,7 +11,18 @@ if not config_parser.read("config_hidden.cfg", encoding="utf-8"):
 game_path = config_parser.get("admin", "game_library_root_path")
 torrent_path = config_parser.get("admin", "torrents_completed_root_path")
 
+# Qbittorrent connection information
+conn_info = {
+    "host": config_parser.get("qbittorrent", "host"),
+    "port": config_parser.getint("qbittorrent", "port"),
+    "username": config_parser.get("qbittorrent", "username"),
+    "password": config_parser.get("qbittorrent", "password"),
+}
+qbit_category = config_parser.get("qbittorrent", "category")
+
 __all__ = [
     "game_path",
-    "torrent_path"
+    "torrent_path",
+    "conn_info",
+    "qbit_category"
 ]

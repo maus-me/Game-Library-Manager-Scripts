@@ -54,7 +54,7 @@ def remove_extras():
                 # Zip file cleanup
                 if any(zip_string.lower() in file.lower() for zip_string in zip_strings) and file.endswith('.zip'):
                     try:
-                        # os.remove(file_path)
+                        os.remove(file_path)
                         # log which file was removed and the size of the file
                         logger.info(f'Removed extras: {trim_path(file_path)} | Size: {format_size(size)}')
                     except Exception as e:
