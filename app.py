@@ -64,19 +64,6 @@ def tag(value):
     if value:
         return f" ({value})"
 
-# Search through folders for .txt files and remove them
-def cleanup_folders():
-    logger.info("Starting to clean up folders...")
-    for folder in os.listdir(torrent_path):
-        folder_path = os.path.join(torrent_path, folder)
-        if os.path.isdir(folder_path):
-            for file in os.listdir(folder_path):
-                if file.endswith('gog-games.to.txt'):
-                    file_path = os.path.join(folder_path, file)
-                    os.remove(file_path)
-                    logger.info(f'Removed file: {file} from folder: {folder}')
-
-    logger.info("Cleanup completed.")
 
 
 # Main function to execute the renaming
@@ -85,7 +72,6 @@ def main():
     logger.info("Starting the application...")
 
     rename_folders()
-    cleanup_folders()
     move_completed_torrents()
 
     post_library_cleanup()
