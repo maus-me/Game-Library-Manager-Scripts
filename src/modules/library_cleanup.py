@@ -44,8 +44,12 @@ def remove_extras():
 
                 # Text file cleanup
                 if file.endswith('gog-games.to.txt'):
-                    os.remove(file_path)
-                    logger.info(f'Removed txt: {file_path} | Size saved: {file_size}')
+                    try:
+                        os.remove(file_path)
+                        logger.info(f'Removed txt: {file_path} | Size saved: {file_size}')
+                    except Exception as e:
+                        logger.error(f'Error removing file {file_path}: {e}')
+
 
                 # Zip file cleanup
                 if any(zip_string.lower() in file.lower() for zip_string in zip_strings) and file.endswith('.zip'):
