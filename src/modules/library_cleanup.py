@@ -20,6 +20,7 @@ def post_library_cleanup():
     # Remove unnecessary files
     remove_extras()
     remove_empty()
+    nuke_timetags()
     # duplicate_game_check()
 
 
@@ -81,30 +82,23 @@ def remove_empty():
                     logger.error(f'Error removing empty directory {folder_path}: {e}')
 
 
-# def duplicate_game_check():
-#     """
-#     Match duplicate games based on identical folder names excluding values between ().
-#     Then compare any duplicates based on the 5 digits at the end of the folder name and
-#     delete the one with a lower number.
-#     :return: None
-#     """
-#     logger.info("Checking for duplicate games...")
-#
-#     for folder in os.listdir(game_path):
-#         folder_path = os.path.join(game_path, folder)
-#         if os.path.isdir(folder_path):
-#             # Extract the base name without the tag
-#             base_name = ' '.join(part for part in folder.split() if not part.startswith('(') and not part.endswith(')'))
-#             # Find all folders with the same base name
-#             duplicates = [f for f in os.listdir(game_path) if f.startswith(base_name) and f != folder]
-#             if duplicates:
-#                 # Sort duplicates by the 5 numbers at the end of the folder name within the () tags, sort in ascending order
-#                 duplicates = sorted(duplicates, key=lambda x: int(x.split('(')[-1].split(')')[0]) if '(' in x and ')' in x else 0)
-#
-#                 # print the duplicates found
-#                 logger.info(f"Found duplicates for '{base_name}': {', '.join(duplicates)}")
-#                 # Keep the last one (the one with the highest number)
-
+def nuke_timetags():
+    # Remove the timetags from the directory names,
+    # such as (72361) or (86414) that are contained in the folder name
+    logger.info("Removing timetags from directory names...")
+    for folder in os.listdir(game_path):
+        folder_path = os.path.join(game_path, folder)
+        if os.path.isdir(folder_path):
+            # Remove the 5 number wrapped in (), such as (78491) that is contained in the folder name
+            new_name = ' '.join(
+                word for word in folder.split() if not (word.startswith('(') and word.endswith(')') and len(word) == 7))
+            new_folder_path = os.path.join(game_path, new_name)
+            if new_folder_path != folder_path:
+                try:
+                    os.rename(folder_path, new_folder_path)
+                    logger.info(f'Renamed {folder_path} to {new_folder_path}')
+                except OSError as e:
+                    logger.error(f'Error renaming {folder_path} to {new_folder_path}: {e}')
 
 
 
