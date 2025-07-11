@@ -46,7 +46,7 @@ def remove_extras():
                 if file.endswith('gog-games.to.txt'):
                     try:
                         os.remove(file_path)
-                        logger.info(f'Removed txt: {file_path} | Size saved: {file_size}')
+                        logger.info(f'Removed txt: {trim_path(file_path)} | Size: {file_size}')
                     except Exception as e:
                         logger.error(f'Error removing file {file_path}: {e}')
 
@@ -56,12 +56,25 @@ def remove_extras():
                     try:
                         # os.remove(file_path)
                         # log which file was removed and the size of the file
-                        logger.info(f'Removed extras: {file_path} | Size saved: {file_size}')
+                        logger.info(f'Removed extras: {trim_path(file_path)} | Size: {file_size}')
                     except Exception as e:
                         logger.error(f'Error removing file {file_path}: {e}')
 
     logger.info("Removal of unnecessary files completed.")
 
+
+def trim_path(path):
+    """
+    Trim the path to only the last part of the path and parent directory.
+    :param path: The path to trim.
+    :return: The trimmed path.
+    """
+    if not path:
+        return ""
+    # Split the path into parts
+    parts = path.split(os.sep)
+    # Return the last part and the parent directory
+    return os.path.join(parts[-2], parts[-1]) if len(parts) > 1 else parts[-1]
 
 def remove_empty():
     """
