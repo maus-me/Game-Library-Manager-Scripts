@@ -37,17 +37,20 @@ def remove_extras():
         if os.path.isdir(folder_path):
             for file in os.listdir(folder_path):
                 file_path = os.path.join(folder_path, file)
+                # calculate filesize
+                file_size = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
 
                 # Text file cleanup
                 if file.endswith('gog-games.to.txt'):
                     os.remove(file_path)
-                    logger.info(f'Removed txt file: {file_path}')
+                    logger.info(f'Removed txt: {file_path} | Size saved: {file_size}')
 
                 # Zip file cleanup
                 if any(zip_string.lower() in file.lower() for zip_string in zip_strings) and file.endswith('.zip'):
                     try:
                         # os.remove(file_path)
-                        logger.info(f'Removed unnecessary file: {file_path}')
+                        # log which file was removed and the size of the file
+                        logger.info(f'Removed extras: {file_path} | Size saved: {file_size}')
                     except Exception as e:
                         logger.error(f'Error removing file {file_path}: {e}')
 
