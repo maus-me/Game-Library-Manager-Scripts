@@ -20,6 +20,7 @@ def post_library_cleanup():
     # Remove unnecessary files
     remove_extras()
     remove_empty()
+    duplicate_game_check()
 
 
 def remove_extras():
@@ -82,10 +83,32 @@ def remove_empty():
 
 def duplicate_game_check():
     """
-    Check for duplicate games in the game library root path.
-    :return: List of duplicate games.
+    Match duplicate games based on identical folder names excluding values between ().
+    Then compare any duplicates based on the 5 digits at the end of the folder name and
+    delete the one with a lower number.
+    :return: None
     """
     logger.info("Checking for duplicate games...")
+
+    for folder in os.listdir(game_path):
+        folder_path = os.path.join(game_path, folder)
+        if os.path.isdir(folder_path):
+            # Extract the base name without the tag
+            base_name = ' '.join(part for part in folder.split() if not part.startswith('(') and not part.endswith(')'))
+            # Find all folders with the same base name
+            duplicates = [f for f in os.listdir(game_path) if f.startswith(base_name) and f != folder]
+            if duplicates:
+                # Sort duplicates by the number at the end of the folder name
+                duplicates.sort(key=lambda x: int(x.split()[-1]) if x.split()[-1].isdigit() else 0)
+                # Keep the last one (highest number) and delete the others
+                for dup in duplicates[:-1]:
+                    dup_path = os.path.join(game_path, dup)
+                    try:
+                        # os.rmdir(dup_path)
+                        logger.info(f'Removed duplicate directory: {dup_path}')
+                    except OSError as e:
+                        logger.error(f'Error removing duplicate directory {dup_path}: {e}')
+
 
 
 
