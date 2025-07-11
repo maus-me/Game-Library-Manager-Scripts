@@ -92,6 +92,10 @@ def new_folder(torrent_name):
         word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
         new_name.split())
 
+    # TODO: Add tweaks to handle the "Base" in folder names.
+    # Examples of this would be: "Enhanced Edition Base" to "Enhanced Edition" or "Myst Base"
+    # new_name = new_name.replace('Edition Base','Edition')
+
     logger.info(f'Renamed folder: {torrent_name} to {new_name}')
     return new_name
 
