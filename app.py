@@ -1,68 +1,14 @@
-# At the beginning of app.py
-
 # Load modules
 from src.logger_config import setup_logging
-from src.modules.config_parse import *
 from src.modules.library_cleanup import post_library_cleanup
+from src.modules.torrents import torrent_manager
 
 # Configure logging before importing other modules
 setup_logging()
 
-import os
 import logging
-import subprocess
 
 logger = logging.getLogger(__name__)
-
-
-
-# Move completed torrents to the game library root path
-def move_completed_torrents():
-    logger.info("Starting to move completed torrents...")
-    for folder in os.listdir(torrent_path):
-        source = os.path.join(torrent_path, folder)
-        if os.path.isdir(source):
-            # Move the torrent file to the game library root path
-            destination = os.path.join(game_path, folder)
-            try:
-                subprocess.run(['mv', source, destination], check=True)
-                logger.info(f'Moved {source} to {destination}')
-            except subprocess.CalledProcessError as e:
-                logger.error(f'Error moving {source}: {e}')
-
-    logger.info("Completed moving torrents.")
-
-# For each folder in the current directory remove the part of the foldername
-def rename_folders():
-    logger.info("Starting to rename folders...")
-    for folder in os.listdir(torrent_path):
-        if os.path.isdir(os.path.join(torrent_path, folder)):
-            # Do the renaming
-            new_name = folder
-
-            new_name = new_name.replace('_gog', f'{tag("GOG")}')
-            new_name = new_name.replace('_windows', f'{tag("Windows")}')
-
-            # Remove any remaining underscores (might not be needed?)
-            new_name = new_name.replace('_', ' ')
-
-            # Capitalize the first letter of each word except for words between ()
-            new_name = ' '.join(
-                word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
-                new_name.split())
-
-            os.rename(os.path.join(torrent_path, folder), os.path.join(torrent_path, new_name))
-            logger.info(f'Renamed folder: {folder} to {new_name}')
-
-    logger.info("Renaming completed.")
-
-
-def tag(value):
-    """
-    Function to apply tag to folder name consistently based on value passed to function.
-    """
-    if value:
-        return f" ({value})"
 
 
 
@@ -71,9 +17,7 @@ def main():
     logging.basicConfig(filename='logs/logs.log', level=logging.INFO)
     logger.info("Starting the application...")
 
-    rename_folders()
-    move_completed_torrents()
-
+    torrent_manager()
     post_library_cleanup()
 
 

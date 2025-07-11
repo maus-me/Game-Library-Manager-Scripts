@@ -62,6 +62,26 @@ def remove_extras():
 
     logger.info("Removal of unnecessary files completed.")
 
+def remove_empty():
+    """
+    Remove empty directories in the game library root path.
+    :return:
+    """
+    logger.info("Removing empty directories...")
+
+    for folder in os.listdir(game_path):
+        folder_path = os.path.join(game_path, folder)
+        if os.path.isdir(folder_path):
+            # Check if the directory is empty
+            if not os.listdir(folder_path):
+                try:
+                    os.rmdir(folder_path)
+                    logger.info(f'Removed empty directory: {folder_path}')
+                except OSError as e:
+                    logger.error(f'Error removing empty directory {folder_path}: {e}')
+
+    logger.info("Empty directory removal completed.")
+
 
 def trim_path(path):
     """
@@ -89,23 +109,3 @@ def format_size(size, suffix="B"):
             return f"{size:3.1f}{unit}{suffix}"
         size /= 1024.0
     return f"{size:.1f}Yi{suffix}"
-
-def remove_empty():
-    """
-    Remove empty directories in the game library root path.
-    :return:
-    """
-    logger.info("Removing empty directories...")
-
-    for folder in os.listdir(game_path):
-        folder_path = os.path.join(game_path, folder)
-        if os.path.isdir(folder_path):
-            # Check if the directory is empty
-            if not os.listdir(folder_path):
-                try:
-                    os.rmdir(folder_path)
-                    logger.info(f'Removed empty directory: {folder_path}')
-                except OSError as e:
-                    logger.error(f'Error removing empty directory {folder_path}: {e}')
-
-    logger.info("Empty directory removal completed.")
