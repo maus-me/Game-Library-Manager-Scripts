@@ -1,6 +1,7 @@
 # Torrent handling module
 import logging
 import os
+import shutil
 import subprocess
 
 import qbittorrentapi
@@ -50,6 +51,12 @@ def test():
             destination = os.path.join(game_path, new_name)
 
             if os.path.isdir(source):
+                # Check if the destination directory already exists and delete it if it does
+                if os.path.exists(destination):
+                    try:
+                        shutil.rmtree(destination)
+                    except OSError as e:
+                        logger.error("Error: %s - %s." % (e.filename, e.strerror))
                 # Move the torrent folder to the game library root path
                 try:
                     subprocess.run(['mv', source, destination], check=True)
@@ -71,8 +78,13 @@ def new_folder(torrent_name):
     new_name = new_name.replace('_gog', f'{tag("GOG")}')
     new_name = new_name.replace('_windows', f'{tag("Windows")}')
 
+
     # Remove any remaining underscores (might not be needed?)
     new_name = new_name.replace('_', ' ')
+
+    # Remove the 5 number wrapped in (), such as (78491) that is contained in the folder name
+    new_name = ' '.join(
+        word for word in new_name.split() if not (word.startswith('(') and word.endswith(')') and len(word) == 7))
 
     # Capitalize the first letter of each word except for words between ()
     new_name = ' '.join(
