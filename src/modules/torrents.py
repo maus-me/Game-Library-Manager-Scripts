@@ -105,20 +105,6 @@ def torrent_manager():
     logger.info("Torrent management completed.")
 
 
-# def move_completed_torrents():
-#     logger.info("Starting to move completed torrents...")
-#     for folder in os.listdir(torrent_path):
-#         source = os.path.join(torrent_path, folder)
-#         if os.path.isdir(source):
-#             # Move the torrent file to the game library root path
-#             destination = os.path.join(game_path, folder)
-#             try:
-#                 subprocess.run(['mv', source, destination], check=True)
-#                 logger.info(f'Moved {source} to {destination}')
-#             except subprocess.CalledProcessError as e:
-#                 logger.error(f'Error moving {source}: {e}')
-#
-#     logger.info("Completed moving torrents.")
 
 
 def tag(value):
