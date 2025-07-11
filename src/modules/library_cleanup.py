@@ -32,7 +32,7 @@ def remove_extras():
     """
     logger.info("Removing unnecessary files...")
 
-    zip_strings = ['soundtrack', '_ost', 'flac', '_wav', 'mp3', 'artbook']
+    zip_strings = ['soundtrack', 'ost', 'flac', 'wav', 'mp3', 'artbook']
 
     for folder in os.listdir(game_path):
         folder_path = os.path.join(game_path, folder)
@@ -59,6 +59,8 @@ def remove_extras():
                         logger.info(f'Removed extras: {trim_path(file_path)} | Size: {format_size(size)}')
                     except Exception as e:
                         logger.error(f'Error removing file {file_path}: {e}')
+                else:
+                    logger.debug(f'Skipped file: {trim_path(file_path)} | Size: {format_size(size)}')
 
     logger.info("Removal of unnecessary files completed.")
 
