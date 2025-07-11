@@ -1,4 +1,5 @@
-# Cleanup the library by renaming folders and removing unnecessary files
+# Game library cleanup module
+
 
 import logging
 import os
