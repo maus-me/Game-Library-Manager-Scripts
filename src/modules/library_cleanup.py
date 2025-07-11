@@ -20,7 +20,6 @@ def post_library_cleanup():
     # Remove unnecessary files
     remove_extras()
     remove_empty()
-    # duplicate_game_check()
 
 
 def remove_extras():

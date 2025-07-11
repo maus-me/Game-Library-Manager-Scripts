@@ -54,6 +54,7 @@ def test():
                 # Check if the destination directory already exists and delete it if it does
                 if os.path.exists(destination):
                     try:
+                        logger.info(f'Deleting existing version: {destination}')
                         shutil.rmtree(destination)
                     except OSError as e:
                         logger.error("Error: %s - %s." % (e.filename, e.strerror))
