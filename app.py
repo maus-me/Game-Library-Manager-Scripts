@@ -11,7 +11,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
 # Main function to execute the renaming
 def main():
     logging.basicConfig(filename='logs/logs.log', level=logging.INFO)

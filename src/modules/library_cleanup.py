@@ -21,8 +21,6 @@ def post_library_cleanup():
     remove_extras()
     remove_empty()
 
-    logger.info("Post-library cleanup completed.")
-
 
 def remove_extras():
     """
@@ -62,7 +60,6 @@ def remove_extras():
                 else:
                     logger.debug(f'Skipped file: {trim_path(file_path)} | Size: {format_size(size)}')
 
-    logger.info("Removal of unnecessary files completed.")
 
 def remove_empty():
     """
@@ -82,7 +79,17 @@ def remove_empty():
                 except OSError as e:
                     logger.error(f'Error removing empty directory {folder_path}: {e}')
 
-    logger.info("Empty directory removal completed.")
+
+def duplicate_game_check():
+    """
+    Check for duplicate games in the game library root path.
+    :return: List of duplicate games.
+    """
+    logger.info("Checking for duplicate games...")
+
+
+
+
 
 
 def trim_path(path):
