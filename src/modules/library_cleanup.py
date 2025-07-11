@@ -30,7 +30,7 @@ def remove_extras():
     """
     logger.info("Removing unnecessary files...")
 
-    zip_strings = ['_soundtrack_', 'OST', 'FLAC', 'WAV', 'MP3', 'ARTBOOK']
+    zip_strings = ['soundtrack', '_ost', 'flac', '_wav', 'mp3', 'artbook']
 
     for folder in os.listdir(game_path):
         folder_path = os.path.join(game_path, folder)
