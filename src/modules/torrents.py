@@ -43,15 +43,48 @@ def test():
     """
     # Filter for torrents in the specific category that are done seeding.
     for torrent in qbt_client.torrents_info(category=qbit_category, limit=None, status_filter='completed'):
+        # Validate the torrent state is "Stopped".  This means that the torrent has finished downloading AND seeding.
         if torrent.state == 'stoppedUP':
             # Log which torrents are in the category.  Includes the name, hash, and path.
             logger.info(f'Torrent: {torrent.name} | Hash: {torrent.hash} | Path: {torrent.content_path}')
+
+            source = torrent.content_path
+            name = torrent.name
+            # Create new folder name based on the torrent name
+            rename_folder(name)
 
             # Delete the torrent from qBittorrent
             # TODO: Uncomment the line below to enable deletion of torrents
             # qbt_client.torrents_delete(torrent_hashes=torrent.hash, delete_files=False)
 
-        # logger.info(f'Torrent: {torrent.name} | State: {torrent.state} | Category: {torrent.category}')
+            # Copy and Delete to the game library root path
+            # destination = os.path.join(game_path, f'{}')
+
+
+def rename_folder(torrent_name):
+    """
+    Rename the folder based on the torrent name.
+    :return:
+    """
+    # This function is not currently used, but can be used to rename folders based on the torrent name.
+    new_name = torrent_name
+
+    new_name = new_name.replace('_gog', f'{tag("GOG")}')
+    new_name = new_name.replace('_windows', f'{tag("Windows")}')
+
+    # Remove any remaining underscores (might not be needed?)
+    new_name = new_name.replace('_', ' ')
+
+    # Capitalize the first letter of each word except for words between ()
+    new_name = ' '.join(
+        word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
+        new_name.split())
+
+    # os.rename(os.path.join(torrent_path, torrent_name), os.path.join(torrent_path, new_name))
+    logger.info(f'Renamed folder: {torrent_name} to {new_name}')
+
+
+logger.info("Renaming completed.")
 
 def torrent_manager():
     """
@@ -84,28 +117,28 @@ def move_completed_torrents():
 
 
 # For each folder in the current directory remove the part of the foldername
-def rename_folders():
-    logger.info("Starting to rename folders...")
-    for folder in os.listdir(torrent_path):
-        if os.path.isdir(os.path.join(torrent_path, folder)):
-            # Do the renaming
-            new_name = folder
-
-            new_name = new_name.replace('_gog', f'{tag("GOG")}')
-            new_name = new_name.replace('_windows', f'{tag("Windows")}')
-
-            # Remove any remaining underscores (might not be needed?)
-            new_name = new_name.replace('_', ' ')
-
-            # Capitalize the first letter of each word except for words between ()
-            new_name = ' '.join(
-                word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
-                new_name.split())
-
-            os.rename(os.path.join(torrent_path, folder), os.path.join(torrent_path, new_name))
-            logger.info(f'Renamed folder: {folder} to {new_name}')
-
-    logger.info("Renaming completed.")
+# def rename_folders():
+#     logger.info("Starting to rename folders...")
+#     for folder in os.listdir(torrent_path):
+#         if os.path.isdir(os.path.join(torrent_path, folder)):
+#             # Do the renaming
+#             new_name = folder
+#
+#             new_name = new_name.replace('_gog', f'{tag("GOG")}')
+#             new_name = new_name.replace('_windows', f'{tag("Windows")}')
+#
+#             # Remove any remaining underscores (might not be needed?)
+#             new_name = new_name.replace('_', ' ')
+#
+#             # Capitalize the first letter of each word except for words between ()
+#             new_name = ' '.join(
+#                 word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
+#                 new_name.split())
+#
+#             os.rename(os.path.join(torrent_path, folder), os.path.join(torrent_path, new_name))
+#             logger.info(f'Renamed folder: {folder} to {new_name}')
+#
+#     logger.info("Renaming completed.")
 
 
 def tag(value):
