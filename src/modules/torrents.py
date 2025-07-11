@@ -43,7 +43,15 @@ def test():
     """
     # Filter for torrents in the specific category that are done seeding.
     for torrent in qbt_client.torrents_info(category=qbit_category, limit=None, status_filter='completed'):
-        logger.info(f'Torrent: {torrent.name} | State: {torrent.state} | Category: {torrent.category}')
+        if torrent.state == 'stoppedUP':
+            # Log which torrents are in the category.  Includes the name, hash, and path.
+            logger.info(f'Torrent: {torrent.name} | Hash: {torrent.hash} | Path: {torrent.content_path}')
+
+            # Delete the torrent from qBittorrent
+            # TODO: Uncomment the line below to enable deletion of torrents
+            # qbt_client.torrents_delete(torrent_hashes=torrent.hash, delete_files=False)
+
+        # logger.info(f'Torrent: {torrent.name} | State: {torrent.state} | Category: {torrent.category}')
 
 def torrent_manager():
     """
