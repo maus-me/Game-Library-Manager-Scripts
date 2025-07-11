@@ -95,6 +95,7 @@ def duplicate_game_check():
         if os.path.isdir(folder_path):
             # Extract the base name without the tag
             base_name = ' '.join(part for part in folder.split() if not part.startswith('(') and not part.endswith(')'))
+            logger.info(f"Checking folder: {folder} with base name: {base_name}")
             # Find all folders with the same base name
             duplicates = [f for f in os.listdir(game_path) if f.startswith(base_name) and f != folder]
             if duplicates:
