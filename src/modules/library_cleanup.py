@@ -98,16 +98,19 @@ def duplicate_game_check():
             # Find all folders with the same base name
             duplicates = [f for f in os.listdir(game_path) if f.startswith(base_name) and f != folder]
             if duplicates:
-                # Sort duplicates by the number at the end of the folder name
-                duplicates.sort(key=lambda x: int(x.split()[-1]) if x.split()[-1].isdigit() else 0)
-                # Keep the last one (highest number) and delete the others
+                # Sort duplicates by the 5 numbers at the end of the folder name within the () tags
+                duplicates.sort(key=lambda x: int(x.split('(')[-1].split(')')[0]) if '(' in x and ')' in x else 0)
+                # print the duplicates found
+                logger.info(f"Found duplicates for '{base_name}': {', '.join(duplicates)}")
+                # Keep the last one (the one with the highest number)
                 for dup in duplicates[:-1]:
                     dup_path = os.path.join(game_path, dup)
                     try:
-                        # os.rmdir(dup_path)
+                        # os.rmdir(dup_path)  # Remove the directory
                         logger.info(f'Removed duplicate directory: {dup_path}')
                     except OSError as e:
                         logger.error(f'Error removing duplicate directory {dup_path}: {e}')
+
 
 
 
