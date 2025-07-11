@@ -40,13 +40,13 @@ def remove_extras():
             for file in os.listdir(folder_path):
                 file_path = os.path.join(folder_path, file)
                 # calculate filesize
-                file_size = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
+                size = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
 
                 # Text file cleanup
                 if file.endswith('gog-games.to.txt'):
                     try:
                         os.remove(file_path)
-                        logger.info(f'Removed txt: {trim_path(file_path)} | Size: {file_size}')
+                        logger.info(f'Removed txt: {trim_path(file_path)} | Size: {format_size(size)}')
                     except Exception as e:
                         logger.error(f'Error removing file {file_path}: {e}')
 
@@ -56,7 +56,7 @@ def remove_extras():
                     try:
                         # os.remove(file_path)
                         # log which file was removed and the size of the file
-                        logger.info(f'Removed extras: {trim_path(file_path)} | Size: {file_size}')
+                        logger.info(f'Removed extras: {trim_path(file_path)} | Size: {format_size(size)}')
                     except Exception as e:
                         logger.error(f'Error removing file {file_path}: {e}')
 
@@ -74,7 +74,21 @@ def trim_path(path):
     # Split the path into parts
     parts = path.split(os.sep)
     # Return the last part and the parent directory
+    # TODO: Review this code, it might not work as expected in all cases
     return os.path.join(parts[-2], parts[-1]) if len(parts) > 1 else parts[-1]
+
+
+def format_size(size, suffix="B"):
+    """
+    Format the size in a human-readable format.
+    :param size: The size in bytes.
+    :return:
+    """
+    for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
+        if abs(size) < 1024.0:
+            return f"{size:3.1f}{unit}{suffix}"
+        size /= 1024.0
+    return f"{size:.1f}Yi{suffix}"
 
 def remove_empty():
     """
