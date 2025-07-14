@@ -3,9 +3,12 @@
 
 import logging
 import os
+import shutil
+import subprocess
 
 # Load modules
 from src.modules.config_parse import *
+from src.modules.torrents import new_folder
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +21,8 @@ def post_library_cleanup():
     logger.info("Post-library cleanup...")
 
     # <DANGEROUS> This will rename the directories in the game library root path.
-    nuke()
+    # nuke()
+    reapply()
 
     # Remove unnecessary files
     # remove_extras()
@@ -82,6 +86,29 @@ def remove_empty():
                     logger.info(f'Removed empty directory: {folder_path}')
                 except OSError as e:
                     logger.error(f'Error removing empty directory {folder_path}: {e}')
+
+
+def reapply():
+    for folder in os.listdir(game_path):
+        source = os.path.join(game_path, folder)
+        if os.path.isdir(source):
+            new_name = new_folder(folder)
+
+            if new_name:
+                destination = os.path.join(game_path, new_name)
+                if os.path.exists(destination):
+                    try:
+                        logger.info(f'Deleting existing version: {destination}')
+                        shutil.rmtree(destination)
+                    except OSError as e:
+                        logger.error("Error: %s - %s." % (e.filename, e.strerror))
+                # Move the torrent folder to the game library root path
+                try:
+                    subprocess.run(['mv', source, destination], check=True)
+                    logger.info(f'Moved {source} to {destination}')
+                except subprocess.CalledProcessError as e:
+                    logger.error(f'Error moving {source}: {e}')
+
 
 
 def nuke():

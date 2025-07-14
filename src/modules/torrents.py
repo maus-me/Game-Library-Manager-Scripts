@@ -83,8 +83,6 @@ def new_folder(torrent_name):
     # Remove everything after the first underscore in _windows_gog_
     if '_windows_gog_' in torrent_name:
         new_name = torrent_name.split('_windows_gog_')[0]
-    else:
-        logger.warning(f"Expected '_windows_gog_' in torrent name, but not found: {torrent_name}")
 
     # Search cache/gog_recent_torrents.json for the torrent slug
     try:
@@ -99,20 +97,7 @@ def new_folder(torrent_name):
                 new_name = item['title']
                 logger.info(f'Found matching slug: {item["slug"]} for title: {torrent_name}')
     except:
-        # Fallback handling if the name does not match any slug in the json file
-        logger.warning(f"Could not find matching slug for torrent name: {torrent_name}. Using original name.")
-
-        # Remove any remaining underscores (might not be needed?)
-        new_name = torrent_name.replace('_', ' ')
-
-        # Capitalize the first letter of each word except for words between ()
-        # new_name = ' '.join(
-        #     word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
-        #     new_name.split())
-
-        # TODO: Add tweaks to handle the "Base" in folder names.
-        # Examples of this would be: "Enhanced Edition Base" to "Enhanced Edition" or "Myst Base"
-        new_name = new_name.replace(' Base ', ' ')
+        return None
 
     logger.info(f'Renamed folder: {torrent_name} to {new_name}')
     return new_name
