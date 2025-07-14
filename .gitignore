@@ -6,4 +6,4 @@ notes.txt
 test.py
 temp/
 logs/*
-cache/*
+cache/*.json
