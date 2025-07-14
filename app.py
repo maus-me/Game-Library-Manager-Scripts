@@ -1,6 +1,7 @@
 # Load modules
 from src.logger_config import setup_logging
 from src.modules.library_cleanup import post_library_cleanup
+from src.modules.torrents import get_gog_all_games
 
 # Configure logging before importing other modules
 setup_logging()
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 def main():
     logging.basicConfig(filename='logs/logs.log', level=logging.INFO)
     logger.info("Starting the application...")
-    # get_gog_all_games()
+    get_gog_all_games()
 
     #torrent_manager()
     post_library_cleanup()
