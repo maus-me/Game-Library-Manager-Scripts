@@ -114,6 +114,11 @@ def get_gog_recent_torrents():
     url = "https://gog-games.to/api/web/recent-torrents"
     response = requests.get(url)
 
+    # Ensure the cache directory exists
+    if not os.path.exists('cache'):
+        os.makedirs('cache')
+        logger.info("Created cache directory.")
+
     if response.status_code == 200:
         data = response.json()
         with open('cache/gog_recent_torrents.json', 'w', encoding='utf-8') as f:
@@ -128,6 +133,11 @@ def get_gog_all_games():
     """
     url = "https://gog-games.to/api/web/all-games"
     response = requests.get(url)
+
+    # Ensure the cache directory exists
+    if not os.path.exists('cache'):
+        os.makedirs('cache')
+        logger.info("Created cache directory.")
 
     if response.status_code == 200:
         data = response.json()
