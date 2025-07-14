@@ -1,6 +1,7 @@
 # Load modules
 from src.logger_config import setup_logging
 from src.modules.library_cleanup import post_library_cleanup
+from src.modules.torrents import torrent_manager
 
 # Configure logging before importing other modules
 setup_logging()
