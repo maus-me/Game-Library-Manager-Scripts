@@ -20,9 +20,15 @@ conn_info = {
 }
 qbit_category = config_parser.get("qbittorrent", "category")
 
+wait_time = config_parser.getint("admin", "wait_time_hours")
+
+on_startup = config_parser.getboolean("admin", "on_startup")
+
 __all__ = [
     "game_path",
     "torrent_path",
     "conn_info",
-    "qbit_category"
+    "qbit_category",
+    "wait_time",
+    "on_startup"
 ]
