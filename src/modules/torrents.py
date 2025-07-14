@@ -81,13 +81,14 @@ def new_folder(torrent_name):
     new_name = torrent_name
 
     # Remove everything after the first underscore in _windows_gog_
-    if '_windows_gog_' in torrent_name:
+    if '_windows_gog_' in new_name:
         new_name = torrent_name.split('_windows_gog_')[0]
 
     # Search cache/gog_recent_torrents.json for the torrent slug
     try:
         with open('cache/gog_all_games.json', 'r', encoding='utf-8') as f:
             data = json.load(f)
+            logger.info("Loaded gog_all_games.json.")
 
         # Search the json for data["slug"] that matches the torrent_name
         for item in data:
@@ -97,6 +98,7 @@ def new_folder(torrent_name):
                 new_name = item['title']
                 logger.info(f'Found matching slug: {item["slug"]} for title: {torrent_name}')
     except:
+        logger.error("Error loading gog_all_games.json. Make sure the file exists and is valid JSON.")
         return None
 
     logger.info(f'Renamed folder: {torrent_name} to {new_name}')

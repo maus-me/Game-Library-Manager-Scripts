@@ -108,6 +108,11 @@ def reapply():
                     logger.info(f'Moved {source} to {destination}')
                 except subprocess.CalledProcessError as e:
                     logger.error(f'Error moving {source}: {e}')
+            else:
+                logger.warning(f'Skipped renaming for folder: {folder} - No new name found')
+        else:
+            logger.warning(f'Skipped non-directory: {folder} - Not a directory')
+
 
 
 
