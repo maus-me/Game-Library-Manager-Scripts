@@ -17,9 +17,12 @@ def post_library_cleanup():
     """
     logger.info("Post-library cleanup...")
 
+    # <DANGEROUS> This will rename the directories in the game library root path.
+    nuke()
+
     # Remove unnecessary files
-    remove_extras()
-    remove_empty()
+    # remove_extras()
+    # remove_empty()
 
 
 def remove_extras():
@@ -81,16 +84,26 @@ def remove_empty():
                     logger.error(f'Error removing empty directory {folder_path}: {e}')
 
 
-def nuke_timetags():
+def nuke():
     # Remove the timetags from the directory names,
     # such as (72361) or (86414) that are contained in the folder name
     logger.info("Removing timetags from directory names...")
     for folder in os.listdir(game_path):
         folder_path = os.path.join(game_path, folder)
         if os.path.isdir(folder_path):
+
+            new_name = folder
+
             # Remove the 5 number wrapped in (), such as (78491) that is contained in the folder name
-            new_name = ' '.join(
-                word for word in folder.split() if not (word.startswith('(') and word.endswith(')') and len(word) == 7))
+            if '(Windows) (GOG)' in new_name:
+                new_name = new_name.replace('(Windows) (GOG)', '').strip()
+
+            # Replace spaces with underscores
+            new_name = new_name.replace(' ', '_')
+
+            # change the name to lowercase
+            new_name = new_name.lower()
+
             new_folder_path = os.path.join(game_path, new_name)
             if new_folder_path != folder_path:
                 try:

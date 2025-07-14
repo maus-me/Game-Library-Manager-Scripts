@@ -105,14 +105,10 @@ def new_folder(torrent_name):
         # Remove any remaining underscores (might not be needed?)
         new_name = torrent_name.replace('_', ' ')
 
-        # Remove the 5 number wrapped in (), such as (78491) that is contained in the folder name
-        new_name = ' '.join(
-            word for word in new_name.split() if not (word.startswith('(') and word.endswith(')') and len(word) == 7))
-
         # Capitalize the first letter of each word except for words between ()
-        new_name = ' '.join(
-            word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
-            new_name.split())
+        # new_name = ' '.join(
+        #     word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
+        #     new_name.split())
 
         # TODO: Add tweaks to handle the "Base" in folder names.
         # Examples of this would be: "Enhanced Edition Base" to "Enhanced Edition" or "Myst Base"
