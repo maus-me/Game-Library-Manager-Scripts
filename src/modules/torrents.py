@@ -134,7 +134,7 @@ def get_gog_all_games():
     response = requests.get(url)
 
     # Ensure the cache directory exists
-    filename = 'cache/gog_recent_torrents.json'
+    filename = 'cache/gog_all_games.json'
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     if response.status_code == 200:
