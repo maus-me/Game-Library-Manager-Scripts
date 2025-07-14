@@ -22,11 +22,11 @@ def post_library_cleanup():
 
     # <DANGEROUS> This will rename the directories in the game library root path.
     # nuke()
-    reapply()
+    # reapply()
 
     # Remove unnecessary files
-    # remove_extras()
-    # remove_empty()
+    remove_extras()
+    remove_empty()
 
 
 def remove_extras():

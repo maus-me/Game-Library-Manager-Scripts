@@ -154,12 +154,10 @@ def torrent_manager():
     logger.info("Starting torrent manager...")
 
     auth_validation()
-
     # get_gog_recent_torrents()
     get_gog_all_games()
-
-
     test()
+
     # move_completed_torrents()
 
 
