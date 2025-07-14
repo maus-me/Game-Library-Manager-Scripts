@@ -37,6 +37,7 @@ def remove_extras():
         if os.path.isdir(folder_path):
             for file in os.listdir(folder_path):
                 file_path = os.path.join(folder_path, file)
+
                 # calculate filesize
                 size = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
 

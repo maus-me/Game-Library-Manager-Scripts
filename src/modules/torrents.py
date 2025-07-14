@@ -1,10 +1,12 @@
 # Torrent handling module
+import json
 import logging
 import os
 import shutil
 import subprocess
 
 import qbittorrentapi
+import requests
 
 # Load modules
 from src.modules.config_parse import *
@@ -72,35 +74,86 @@ def test():
 def new_folder(torrent_name):
     """
     Rework the folder name based on the torrent name.
+    Example of original folder name: stalker_2_heart_of_chornobyl_windows_gog_(83415)
+
     :return:
     """
     new_name = torrent_name
 
-    new_name = new_name.replace('_gog', f'{tag("GOG")}')
-    new_name = new_name.replace('_windows', f'{tag("Windows")}')
+    # Remove everything after the first underscore in _windows_gog_
+    if '_windows_gog_' in torrent_name:
+        new_name = torrent_name.split('_windows_gog_')[0]
+    else:
+        logger.warning(f"Expected '_windows_gog_' in torrent name, but not found: {torrent_name}")
 
+    # Search cache/gog_recent_torrents.json for the torrent slug
+    try:
+        with open('cache/gog_all_games.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
 
-    # Remove any remaining underscores (might not be needed?)
-    new_name = new_name.replace('_', ' ')
+        # Search the json for data["slug"] that matches the torrent_name
+        for item in data:
+            # if slug equals the torrent_name, set the torrent_name to the title of the item
+            if item['slug'] == torrent_name:
+                # If found, set the torrent_name to the title of the item
+                new_name = item['title']
+                logger.info(f'Found matching slug: {item["slug"]} for title: {torrent_name}')
+    except:
+        # Fallback handling if the name does not match any slug in the json file
+        logger.warning(f"Could not find matching slug for torrent name: {torrent_name}. Using original name.")
 
-    # Remove the 5 number wrapped in (), such as (78491) that is contained in the folder name
-    new_name = ' '.join(
-        word for word in new_name.split() if not (word.startswith('(') and word.endswith(')') and len(word) == 7))
+        # Remove any remaining underscores (might not be needed?)
+        new_name = torrent_name.replace('_', ' ')
 
-    # Capitalize the first letter of each word except for words between ()
-    new_name = ' '.join(
-        word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
-        new_name.split())
+        # Remove the 5 number wrapped in (), such as (78491) that is contained in the folder name
+        new_name = ' '.join(
+            word for word in new_name.split() if not (word.startswith('(') and word.endswith(')') and len(word) == 7))
 
-    # TODO: Add tweaks to handle the "Base" in folder names.
-    # Examples of this would be: "Enhanced Edition Base" to "Enhanced Edition" or "Myst Base"
-    # new_name = new_name.replace('Edition Base','Edition')
+        # Capitalize the first letter of each word except for words between ()
+        new_name = ' '.join(
+            word.capitalize() if not word.startswith('(') and not word.endswith(')') else word for word in
+            new_name.split())
+
+        # TODO: Add tweaks to handle the "Base" in folder names.
+        # Examples of this would be: "Enhanced Edition Base" to "Enhanced Edition" or "Myst Base"
+        new_name = new_name.replace(' Base ', ' ')
 
     logger.info(f'Renamed folder: {torrent_name} to {new_name}')
     return new_name
 
 
-logger.info("Renaming completed.")
+def get_gog_recent_torrents():
+    """
+    Save the json data from the GOG API to a file.=.
+    https://gog-games.to/api/web/recent-torrents
+    """
+
+    url = "https://gog-games.to/api/web/recent-torrents"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        with open('cache/gog_recent_torrents.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        logger.info("Saved recent torrents data to gog_recent_torrents.json")
+
+
+def get_gog_all_games():
+    """
+    Save the json data from the GOG API to a file.
+    https://gog-games.to/api/web/all-games
+    """
+    url = "https://gog-games.to/api/web/all-games"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        with open('cache/gog_all_games.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+        logger.info("Saved all games data to gog_all_games.json")
+
+
+
 
 def torrent_manager():
     """
@@ -110,6 +163,11 @@ def torrent_manager():
     logger.info("Starting torrent manager...")
 
     auth_validation()
+
+    # get_gog_recent_torrents()
+    get_gog_all_games()
+
+
     test()
     # move_completed_torrents()
 
