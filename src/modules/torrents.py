@@ -115,13 +115,12 @@ def get_gog_recent_torrents():
     response = requests.get(url)
 
     # Ensure the cache directory exists
-    if not os.path.exists('cache'):
-        os.makedirs('cache')
-        logger.info("Created cache directory.")
+    filename = 'cache/gog_recent_torrents.json'
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     if response.status_code == 200:
         data = response.json()
-        with open('cache/gog_recent_torrents.json', 'w', encoding='utf-8') as f:
+        with open(filename, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
         logger.info("Saved recent torrents data to gog_recent_torrents.json")
 
@@ -135,13 +134,12 @@ def get_gog_all_games():
     response = requests.get(url)
 
     # Ensure the cache directory exists
-    if not os.path.exists('cache'):
-        os.makedirs('cache')
-        logger.info("Created cache directory.")
+    filename = 'cache/gog_all_games.json'
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     if response.status_code == 200:
         data = response.json()
-        with open('cache/gog_all_games.json', 'w', encoding='utf-8') as f:
+        with open(filename, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
         logger.info("Saved all games data to gog_all_games.json")
 
