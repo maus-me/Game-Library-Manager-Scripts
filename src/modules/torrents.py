@@ -13,6 +13,12 @@ from src.modules.config_parse import *
 
 logger = logging.getLogger(__name__)
 
+CACHE_DIR = 'cache'
+GOG_ALL_GAMES_FILE = os.path.join(CACHE_DIR, 'gog_all_games.json')
+GOG_RECENT_TORRENTS_FILE = os.path.join(CACHE_DIR, 'gog_recent_torrents.json')
+API_RETRY_DELAY = 3600  # 1 hour
+
+
 qbt_client = qbittorrentapi.Client(**conn_info)
 
 
@@ -50,26 +56,37 @@ def test():
             new_name = new_folder(name)
 
             # Copy and Delete to the game library root path
-            destination = os.path.join(game_path, new_name)
+            destination = str(os.path.join(game_path, new_name))
 
-            if os.path.isdir(source):
-                # Check if the destination directory already exists and delete it if it does
-                if os.path.exists(destination):
-                    try:
-                        logger.info(f'Deleting existing version: {destination}')
-                        shutil.rmtree(destination)
-                    except OSError as e:
-                        logger.error("Error: %s - %s." % (e.filename, e.strerror))
-                # Move the torrent folder to the game library root path
-                try:
-                    # TODO: Check to see if str() is necessary here.
-                    shutil.move(str(source), str(destination))
-                    logger.info(f'Moved {source} to {destination}')
-                except Exception as e:
-                    logger.error(f'Error moving {source}: {e}')
+            move_folder(source, destination)
 
             # Delete the torrent from qBittorrent
             qbt_client.torrents_delete(torrent_hashes=torrent.hash, delete_files=False)
+
+
+def move_folder(source: str, destination: str):
+    """
+    Move a folder from source to destination.
+    :param source: Source folder path
+    :param destination: Destination folder path
+    :return:
+    """
+    if not os.path.isdir(source):
+        logger.error(f"Source path does not exist or is not a directory: {source}")
+        return
+    if os.path.exists(destination):
+        try:
+            logger.info(f"Deleting existing destination: {destination}")
+            shutil.rmtree(destination)
+        except OSError as e:
+            logger.error(f"Error deleting {destination}: {e}")
+            return
+
+    try:
+        shutil.move(source, destination)
+        logger.info(f'Moved {source} to {destination}')
+    except Exception as e:
+        logger.error(f'Error moving {source} to {destination}: {e}')
 
 
 def new_folder(torrent_name):
@@ -79,30 +96,30 @@ def new_folder(torrent_name):
 
     :return:
     """
-    new_name = torrent_name
 
     # Remove everything after the first underscore in _windows_gog_
-    if '_windows_gog_' in new_name:
+    if '_windows_gog_' in torrent_name:
         new_name = torrent_name.split('_windows_gog_')[0]
+    else:
+        new_name = torrent_name
 
     # Search cache/gog_recent_torrents.json for the torrent slug
     try:
-        with open('cache/gog_all_games.json', 'r', encoding='utf-8') as f:
+        with open(GOG_ALL_GAMES_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            logger.info("Loaded gog_all_games.json.")
 
         # Search the json for data["slug"] that matches the torrent_name
         for item in data:
             # if torrent_name equals the slug, set the torrent_name to the title of the item
             if torrent_name == item['slug']:
                 new_name = item['title']
-                logger.info(f'Found exact match: {item["slug"]} for title: {torrent_name}')
+                logger.info(f'Found an exact match: {item["slug"]} for title: {torrent_name}')
             elif torrent_name in item['slug']:
                 # If found, set the torrent_name to the title of the item
                 new_name = item['title']
-                logger.info(f'Found partial match: {item["slug"]} for title: {torrent_name}')
-    except:
-        logger.error("Error loading gog_all_games.json. Make sure the file exists and is valid JSON.")
+                logger.info(f'Found a partial match: {item["slug"]} for title: {torrent_name}')
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.error(f"Error loading {GOG_ALL_GAMES_FILE}. {e}")
         return None
 
     # Remove copyright characters and other unwanted characters that may appear in the metadata.
@@ -115,57 +132,29 @@ def new_folder(torrent_name):
     return new_name
 
 
-def get_gog_recent_torrents():
+def fetch_api_data(url: str, filename: str, retries: int = 3):
     """
-    We want to be respectful of the service, so we will cache the data.
-    https://gog-games.to/api/web/recent-torrents
+    Fetch and save to file.
+    We want to be respectful of the service,
+    so we will cache the data.
     """
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    for attempt in range(retries):
+        try:
+            response = requests.get(url)
 
-    url = "https://gog-games.to/api/web/recent-torrents"
-    try:
-        response = requests.get(url)
-    except:
-        logger.error(
-            "Failed to connect to API. Please check your internet connection or the API URL. Trying again in 60 minutes.")
-        time.sleep(3600)  # 60 minutes
-        get_gog_recent_torrents()
-
-    # Ensure the cache directory exists
-    filename = 'cache/gog_recent_torrents.json'
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-
-    if response.status_code == 200:
-        data = response.json()
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-        logger.info("Saved recent torrents data to gog_recent_torrents.json")
-
-
-def get_gog_all_games():
-    """
-    We want to be respectful of the service, so we will cache the data.
-    https://gog-games.to/api/web/all-games
-    """
-    url = "https://gog-games.to/api/web/all-games"
-    try:
-        response = requests.get(url)
-    except:
-        logger.error(
-            "Failed to connect to API. Please check your internet connection or the API URL. Trying again in 60 minutes.")
-        time.sleep(3600)  # 60 minutes
-        get_gog_all_games()
-
-    # Ensure the cache directory exists
-    filename = 'cache/gog_all_games.json'
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-
-    if response.status_code == 200:
-        data = response.json()
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-        logger.info("Saved all games data to gog_all_games.json")
-
-
+            if response.status_code == 200:
+                data = response.json()
+                with open(filename, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
+                logger.info(f"Saved data to {filename}")
+                return data
+        except requests.RequestException as e:
+            logger.error(f"API error on attempt: {e}")
+            if attempt < retries - 1:
+                time.sleep(API_RETRY_DELAY)
+    logger.error(f"Failed to fetch data from {url} after {retries} attempts.")
+    return None
 
 
 def torrent_manager():
@@ -176,8 +165,8 @@ def torrent_manager():
     logger.info("Starting torrent manager...")
 
     auth_validation()
-    # get_gog_recent_torrents()
-    get_gog_all_games()
+
+    fetch_api_data("https://gog-games.to/api/web/all-games", GOG_ALL_GAMES_FILE)
     test()
 
     # move_completed_torrents()

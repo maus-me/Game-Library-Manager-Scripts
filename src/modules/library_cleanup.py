@@ -168,6 +168,7 @@ def trim_path(path):
 def format_size(size, suffix="B"):
     """
     Format the size in a human-readable format.
+    :param suffix: The suffix to append to the size (default is "B" for bytes).
     :param size: The size in bytes.
     :return:
     """
