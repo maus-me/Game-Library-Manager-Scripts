@@ -83,7 +83,7 @@ def move_folder(source: str, destination: str):
             return
 
     try:
-        shutil.move(source, destination)
+        os.rename(source, destination)
         logger.info(f'Moved {source} to {destination}')
     except Exception as e:
         logger.error(f'Error moving {source} to {destination}: {e}')
