@@ -125,8 +125,7 @@ def new_folder(torrent_name):
         return None
 
     # Remove copyright characters and other unwanted characters that may appear in the metadata.
-    chars = ['©', '®', '™']
-    for char in chars:
+    for char in '©®™':
         new_name = new_name.replace(char, '')
 
     logger.info(f'Renamed folder: {torrent_name} to {new_name}')
