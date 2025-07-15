@@ -93,11 +93,11 @@ def new_folder(torrent_name):
         # Search the json for data["slug"] that matches the torrent_name
         for item in data:
             # if torrent_name equals the slug, set the torrent_name to the title of the item
-            if item['slug'] == new_name:
+            if new_name == item['slug']:
                 new_name = item['title']
                 logger.info(f'Found exact match: {item["slug"]} for title: {new_name}')
                 break
-            elif item['slug'] in new_name:
+            elif new_name in item['slug']:
                 # If found, set the torrent_name to the title of the item
                 new_name = item['title']
                 logger.info(f'Found partial match: {item["slug"]} for title: {new_name}')
