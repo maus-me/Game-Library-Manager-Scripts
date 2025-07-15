@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import shutil
+import subprocess
 import time
 
 import qbittorrentapi
@@ -83,10 +84,12 @@ def move_folder(source: str, destination: str):
             return
 
     try:
-        os.rename(source, destination)
+        # Move the folder to the destination using subprocess
+        subprocess.run(['mv', source, destination], check=True)
         logger.info(f'Moved {source} to {destination}')
     except Exception as e:
         logger.error(f'Error moving {source} to {destination}: {e}')
+        exit(1)
 
 
 def new_folder(torrent_name: str):
