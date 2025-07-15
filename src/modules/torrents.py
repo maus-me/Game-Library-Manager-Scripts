@@ -5,25 +5,16 @@ import os
 import shutil
 
 import qbittorrentapi
-import requests
 
 # Load modules
 from src.modules.config_parse import *
+from src.modules.helpers import fetch_json_data
 
 logger = logging.getLogger(__name__)
 
-CACHE_DIR = 'cache'
-GOG_ALL_GAMES_FILE = os.path.join(CACHE_DIR, 'gog_all_games.json')
-GOG_RECENT_TORRENTS_FILE = os.path.join(CACHE_DIR, 'gog_recent_torrents.json')
-
-GOG_API_ALL_GAMES = "https://gog-games.to/api/web/all-games"
-GOG_API_RECENT_TORRENTS = "https://gog-games.to/api/web/recent-torrents"
-
 API_RETRY_DELAY = 3600  # 1 hour
 
-
 qbt_client = qbittorrentapi.Client(**conn_info)
-
 
 def qbit_preflight():
     """
@@ -47,7 +38,7 @@ def run():
     :return:
     """
     # Filter for torrents in the specific category that are done seeding.
-    for torrent in qbt_client.torrents_info(category=qbit_category, limit=None, status_filter='completed'):
+    for torrent in qbt_client.torrents_info(category=QBIT_CATEGORY, limit=None, status_filter='completed'):
         # Validate the torrent state is "Stopped".  This means that the torrent has finished downloading AND seeding.
         if torrent.state == 'stoppedUP':
             # Log which torrents are in the category.  Includes the name, hash, and path.
@@ -130,7 +121,7 @@ def new_folder(torrent_name):
                 new_name = item['title']
                 logger.info(f'Found partial match: {item["slug"]} for title: {new_name}')
     except Exception as e:
-        logger.error(f"Error loading {GOG_ALL_GAMES_FILE}. Make sure the file exists and is valid JSON.")
+        logger.error(f"Error loading {GOG_ALL_GAMES_FILE}. {e}")
         return None
 
     # Remove copyright characters and other unwanted characters that may appear in the metadata.
@@ -138,31 +129,11 @@ def new_folder(torrent_name):
     for char in chars:
         new_name = new_name.replace(char, '')
 
-
     logger.info(f'Renamed folder: {torrent_name} to {new_name}')
     return new_name
 
 
-def fetch_gog_data(url, filename):
-    """
-    Fetch data from the given URL and save it to the specified file.
-    :param url: API endpoint to fetch data from.
-    :param filename: File path to save the fetched data.
-    """
-    try:
-        response = requests.get(url)
 
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-
-        if response.status_code == 200:
-            data = response.json()
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=4)
-            logger.info(f"Saved data to {filename}")
-        else:
-            logger.error(f"Failed to fetch data from {url}. Status code: {response.status_code}")
-    except requests.RequestException as e:
-        logger.error(f"Error fetching data from {url}: {e}")
 
 def torrent_manager():
     """
@@ -172,5 +143,5 @@ def torrent_manager():
     logger.info("Starting torrent manager...")
 
     qbit_preflight()
-    fetch_gog_data(GOG_API_ALL_GAMES, GOG_ALL_GAMES_FILE)
+    fetch_json_data(GOG_ALL_GAMES_URL, GOG_ALL_GAMES_FILE)
     run()

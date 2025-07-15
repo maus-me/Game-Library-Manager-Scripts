@@ -22,13 +22,13 @@ def main():
     logging.basicConfig(filename='logs/logs.log', level=logging.INFO)
     logger.info("Starting the application...")
 
-    if on_startup:
+    if ON_STARTUP:
         logger.info("Running torrent manager on startup...")
         run()
 
     while True:
-        logger.info(f"Waiting {wait_time} hours for the next cycle...")
-        time.sleep(wait_time * 3600)
+        logger.info(f"Waiting {WAIT_TIME} hours for the next cycle...")
+        time.sleep(WAIT_TIME * 3600)
         run()
 
 

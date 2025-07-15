@@ -18,17 +18,29 @@ conn_info = {
     "username": config_parser.get("qbittorrent", "username"),
     "password": config_parser.get("qbittorrent", "password"),
 }
-qbit_category = config_parser.get("qbittorrent", "category")
 
-wait_time = config_parser.getint("admin", "wait_time_hours")
+QBIT_CATEGORY = config_parser.get("qbittorrent", "category")
+WAIT_TIME = config_parser.getint("admin", "wait_time_hours")
+ON_STARTUP = config_parser.getboolean("admin", "on_startup")
 
-on_startup = config_parser.getboolean("admin", "on_startup")
+# Import GOG from config.cfg
+GOG_ALL_GAMES_FILE = config_parser.get("gog", "gog_all_games_file")
+GOG_RECENT_GAMES_FILE = config_parser.get("gog", "gog_recent_games_file")
+
+GOG_ALL_GAMES_URL = config_parser.get("gog", "gog_all_games_url")
+GOG_RECENT_GAMES_URL = config_parser.get("gog", "gog_recent_games_url")
+
+
 
 __all__ = [
     "game_path",
     "torrent_path",
     "conn_info",
-    "qbit_category",
-    "wait_time",
-    "on_startup"
+    "QBIT_CATEGORY",
+    "WAIT_TIME",
+    "ON_STARTUP",
+    "GOG_ALL_GAMES_FILE",
+    "GOG_RECENT_GAMES_FILE",
+    "GOG_ALL_GAMES_URL",
+    "GOG_RECENT_GAMES_URL"
 ]
