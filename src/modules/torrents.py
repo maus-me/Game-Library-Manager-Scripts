@@ -93,13 +93,14 @@ def new_folder(torrent_name):
         # Search the json for data["slug"] that matches the torrent_name
         for item in data:
             # if torrent_name equals the slug, set the torrent_name to the title of the item
-            if torrent_name == item['slug']:
+            if item['slug'] == new_name:
                 new_name = item['title']
-                logger.info(f'Found exact match: {item["slug"]} for title: {torrent_name}')
-            elif torrent_name in item['slug']:
+                logger.info(f'Found exact match: {item["slug"]} for title: {new_name}')
+                break
+            elif item['slug'] in new_name:
                 # If found, set the torrent_name to the title of the item
                 new_name = item['title']
-                logger.info(f'Found partial match: {item["slug"]} for title: {torrent_name}')
+                logger.info(f'Found partial match: {item["slug"]} for title: {new_name}')
     except:
         logger.error("Error loading gog_all_games.json. Make sure the file exists and is valid JSON.")
         return None
