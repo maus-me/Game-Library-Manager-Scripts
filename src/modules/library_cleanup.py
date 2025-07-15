@@ -3,12 +3,9 @@
 
 import logging
 import os
-import shutil
-import subprocess
 
 # Load modules
 from src.modules.config_parse import *
-from src.modules.torrents import new_folder
 
 logger = logging.getLogger(__name__)
 
@@ -86,69 +83,6 @@ def remove_empty():
                     logger.info(f'Removed empty directory: {folder_path}')
                 except OSError as e:
                     logger.error(f'Error removing empty directory {folder_path}: {e}')
-
-
-def reapply():
-    for folder in os.listdir(game_path):
-        source = os.path.join(game_path, folder)
-        if os.path.isdir(source):
-            new_name = new_folder(folder)
-
-            if new_name:
-                destination = os.path.join(game_path, new_name)
-                if os.path.exists(destination):
-                    try:
-                        logger.info(f'Deleting existing version: {destination}')
-                        shutil.rmtree(destination)
-                    except OSError as e:
-                        logger.error("Error: %s - %s." % (e.filename, e.strerror))
-                # Move the torrent folder to the game library root path
-                try:
-                    subprocess.run(['mv', source, destination], check=True)
-                    logger.info(f'Moved {source} to {destination}')
-                except subprocess.CalledProcessError as e:
-                    logger.error(f'Error moving {source}: {e}')
-            else:
-                logger.warning(f'Skipped renaming for folder: {folder} - No new name found')
-        else:
-            logger.warning(f'Skipped non-directory: {folder} - Not a directory')
-
-
-
-
-def nuke():
-    # Remove the timetags from the directory names,
-    # such as (72361) or (86414) that are contained in the folder name
-    logger.info("Removing timetags from directory names...")
-    for folder in os.listdir(game_path):
-        folder_path = os.path.join(game_path, folder)
-        if os.path.isdir(folder_path):
-
-            new_name = folder
-
-            # Remove the 5 number wrapped in (), such as (78491) that is contained in the folder name
-            if '(Windows) (GOG)' in new_name:
-                new_name = new_name.replace('(Windows) (GOG)', '').strip()
-
-            # Replace spaces with underscores
-            new_name = new_name.replace(' ', '_')
-
-            # change the name to lowercase
-            new_name = new_name.lower()
-
-            new_folder_path = os.path.join(game_path, new_name)
-            if new_folder_path != folder_path:
-                try:
-                    os.rename(folder_path, new_folder_path)
-                    logger.info(f'Renamed {folder_path} to {new_folder_path}')
-                except OSError as e:
-                    logger.error(f'Error renaming {folder_path} to {new_folder_path}: {e}')
-
-
-
-
-
-
 
 def trim_path(path):
     """
