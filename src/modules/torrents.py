@@ -92,19 +92,18 @@ def move_folder(source: str, destination: str):
         exit(1)
 
 
-def new_folder(torrent_name: str):
+def new_folder(torrent_name):
     """
     Rework the folder name based on the torrent name.
     Example of original folder name: stalker_2_heart_of_chornobyl_windows_gog_(83415)
 
     :return:
     """
+    new_name = torrent_name
 
     # Remove everything after the first underscore in _windows_gog_
-    if '_windows_gog_' in torrent_name:
+    if '_windows_gog_' in new_name:
         new_name = torrent_name.split('_windows_gog_')[0]
-    else:
-        new_name = torrent_name
 
     # Search cache/gog_recent_torrents.json for the torrent slug
     try:
