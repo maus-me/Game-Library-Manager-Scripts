@@ -4,7 +4,6 @@ import logging
 import os
 import shutil
 import subprocess
-import time
 
 import qbittorrentapi
 import requests
@@ -13,12 +12,6 @@ import requests
 from src.modules.config_parse import *
 
 logger = logging.getLogger(__name__)
-
-CACHE_DIR = 'cache'
-GOG_ALL_GAMES_FILE = os.path.join(CACHE_DIR, 'gog_all_games.json')
-GOG_RECENT_TORRENTS_FILE = os.path.join(CACHE_DIR, 'gog_recent_torrents.json')
-API_RETRY_DELAY = 3600  # 1 hour
-
 
 qbt_client = qbittorrentapi.Client(**conn_info)
 
@@ -128,13 +121,7 @@ def get_gog_recent_torrents():
     """
 
     url = "https://gog-games.to/api/web/recent-torrents"
-    try:
-        response = requests.get(url)
-    except:
-        logger.error(
-            "Failed to connect to API. Please check your internet connection or the API URL. Trying again in 60 minutes.")
-        time.sleep(3600)  # 60 minutes
-        get_gog_recent_torrents()
+    response = requests.get(url)
 
     # Ensure the cache directory exists
     filename = 'cache/gog_recent_torrents.json'
@@ -153,13 +140,7 @@ def get_gog_all_games():
     https://gog-games.to/api/web/all-games
     """
     url = "https://gog-games.to/api/web/all-games"
-    try:
-        response = requests.get(url)
-    except:
-        logger.error(
-            "Failed to connect to API. Please check your internet connection or the API URL. Trying again in 60 minutes.")
-        time.sleep(3600)  # 60 minutes
-        get_gog_all_games()
+    response = requests.get(url)
 
     # Ensure the cache directory exists
     filename = 'cache/gog_all_games.json'
