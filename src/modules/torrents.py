@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import shutil
-import subprocess
 
 import qbittorrentapi
 import requests
@@ -16,13 +15,17 @@ logger = logging.getLogger(__name__)
 CACHE_DIR = 'cache'
 GOG_ALL_GAMES_FILE = os.path.join(CACHE_DIR, 'gog_all_games.json')
 GOG_RECENT_TORRENTS_FILE = os.path.join(CACHE_DIR, 'gog_recent_torrents.json')
+
+GOG_API_ALL_GAMES = "https://gog-games.to/api/web/all-games"
+GOG_API_RECENT_TORRENTS = "https://gog-games.to/api/web/recent-torrents"
+
 API_RETRY_DELAY = 3600  # 1 hour
 
 
 qbt_client = qbittorrentapi.Client(**conn_info)
 
 
-def auth_validation():
+def qbit_preflight():
     """
     Test Authentication with qBittorrent and log the app version and web API version.
     :return:
@@ -58,31 +61,50 @@ def run():
             # Copy and Delete to the game library root path
             destination = os.path.join(game_path, new_name)
 
-            if os.path.isdir(source):
-                # Check if the destination directory already exists and delete it if it does
-                if os.path.exists(destination):
-                    try:
-                        logger.info(f'Deleting existing version: {destination}')
-                        shutil.rmtree(destination)
-                    except OSError as e:
-                        logger.error("Error: %s - %s." % (e.filename, e.strerror))
-                # Move the torrent folder to the game library root path
-                try:
-                    subprocess.run(['mv', source, destination], check=True)
-                    logger.info(f'Moved {source} to {destination}')
-                except Exception as e:
-                    logger.error(f'Error moving {source}: {e}')
+            if move_torrent_folder(source, destination):
+                delete_torrent(torrent.hash)
 
-            # Delete the torrent from qBittorrent
-            qbt_client.torrents_delete(torrent_hashes=torrent.hash, delete_files=False)
 
+def move_torrent_folder(source, destination):
+    """
+    Move a torrent folder from source to destination.
+    :param source: The source path of the torrent folder.
+    :param destination: The destination path where the torrent folder should be moved.
+    """
+    if os.path.isdir(source):
+        if os.path.exists(destination):
+            try:
+                logger.info(f'Deleting existing version: {destination}')
+                shutil.rmtree(destination)
+            except OSError as e:
+                logger.error(f"Error deleting {destination}: {e}")
+                return False
+        try:
+            shutil.move(source, destination)
+            logger.info(f'Moved {source} to {destination}')
+            return True
+        except Exception as e:
+            logger.error(f'Error moving {source}: {e}')
+    return False
+
+
+def delete_torrent(torrent_hash):
+    """
+    Delete a torrent from qBittorrent by its hash.
+    :param torrent_hash: The hash of the torrent to delete.
+    """
+    try:
+        qbt_client.torrents_delete(torrent_hashes=torrent_hash, delete_files=False)
+        logger.info(f"Deleted torrent with hash: {torrent_hash}")
+    except qbittorrentapi.APIConnectionError as e:
+        logger.error(f"Failed to delete torrent with hash {torrent_hash}: {e}")
 
 def new_folder(torrent_name):
     """
     Rework the folder name based on the torrent name.
     Example of original folder name: stalker_2_heart_of_chornobyl_windows_gog_(83415)
 
-    :return:
+    :return: new folder name based on the torrent name.
     """
     new_name = torrent_name
 
@@ -124,8 +146,6 @@ def new_folder(torrent_name):
 def fetch_gog_data(url, filename):
     """
     Fetch data from the given URL and save it to the specified file.
-    https://gog-games.to/api/web/recent-torrents
-    https://gog-games.to/api/web/all-games
     :param url: API endpoint to fetch data from.
     :param filename: File path to save the fetched data.
     """
@@ -151,6 +171,6 @@ def torrent_manager():
     """
     logger.info("Starting torrent manager...")
 
-    auth_validation()
-    fetch_gog_data("https://gog-games.to/api/web/all-games", GOG_ALL_GAMES_FILE)
+    qbit_preflight()
+    fetch_gog_data(GOG_API_ALL_GAMES, GOG_ALL_GAMES_FILE)
     run()
