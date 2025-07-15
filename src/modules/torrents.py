@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import shutil
-import subprocess
 import time
 
 import qbittorrentapi
@@ -63,9 +62,10 @@ def test():
                         logger.error("Error: %s - %s." % (e.filename, e.strerror))
                 # Move the torrent folder to the game library root path
                 try:
-                    subprocess.run(['mv', source, destination], check=True)
+                    # TODO: Check to see if str() is necessary here.
+                    shutil.move(str(source), str(destination))
                     logger.info(f'Moved {source} to {destination}')
-                except subprocess.CalledProcessError as e:
+                except Exception as e:
                     logger.error(f'Error moving {source}: {e}')
 
             # Delete the torrent from qBittorrent
