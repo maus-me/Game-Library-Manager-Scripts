@@ -13,6 +13,12 @@ from src.modules.config_parse import *
 
 logger = logging.getLogger(__name__)
 
+CACHE_DIR = 'cache'
+GOG_ALL_GAMES_FILE = os.path.join(CACHE_DIR, 'gog_all_games.json')
+GOG_RECENT_TORRENTS_FILE = os.path.join(CACHE_DIR, 'gog_recent_torrents.json')
+API_RETRY_DELAY = 3600  # 1 hour
+
+
 qbt_client = qbittorrentapi.Client(**conn_info)
 
 
@@ -32,7 +38,7 @@ def auth_validation():
         exit(1)
 
 
-def test():
+def run():
     """
     Initial testing to see if we can retrieve torrents in a specific category that are done seeding.
     :return:
@@ -64,7 +70,7 @@ def test():
                 try:
                     subprocess.run(['mv', source, destination], check=True)
                     logger.info(f'Moved {source} to {destination}')
-                except subprocess.CalledProcessError as e:
+                except Exception as e:
                     logger.error(f'Error moving {source}: {e}')
 
             # Delete the torrent from qBittorrent
@@ -86,9 +92,9 @@ def new_folder(torrent_name):
 
     # Search cache/gog_recent_torrents.json for the torrent slug
     try:
-        with open('cache/gog_all_games.json', 'r', encoding='utf-8') as f:
+        with open(GOG_ALL_GAMES_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            logger.info("Loaded gog_all_games.json.")
+            logger.info(f"Loaded {GOG_ALL_GAMES_FILE}.")
 
         # Search the json for data["slug"] that matches the torrent_name
         for item in data:
@@ -101,8 +107,8 @@ def new_folder(torrent_name):
                 # If found, set the torrent_name to the title of the item
                 new_name = item['title']
                 logger.info(f'Found partial match: {item["slug"]} for title: {new_name}')
-    except:
-        logger.error("Error loading gog_all_games.json. Make sure the file exists and is valid JSON.")
+    except Exception as e:
+        logger.error(f"Error loading {GOG_ALL_GAMES_FILE}. Make sure the file exists and is valid JSON.")
         return None
 
     # Remove copyright characters and other unwanted characters that may appear in the metadata.
@@ -115,46 +121,28 @@ def new_folder(torrent_name):
     return new_name
 
 
-def get_gog_recent_torrents():
+def fetch_gog_data(url, filename):
     """
-    We want to be respectful of the service, so we will cache the data.
+    Fetch data from the given URL and save it to the specified file.
     https://gog-games.to/api/web/recent-torrents
-    """
-
-    url = "https://gog-games.to/api/web/recent-torrents"
-    response = requests.get(url)
-
-    # Ensure the cache directory exists
-    filename = 'cache/gog_recent_torrents.json'
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-
-    if response.status_code == 200:
-        data = response.json()
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-        logger.info("Saved recent torrents data to gog_recent_torrents.json")
-
-
-def get_gog_all_games():
-    """
-    We want to be respectful of the service, so we will cache the data.
     https://gog-games.to/api/web/all-games
+    :param url: API endpoint to fetch data from.
+    :param filename: File path to save the fetched data.
     """
-    url = "https://gog-games.to/api/web/all-games"
-    response = requests.get(url)
+    try:
+        response = requests.get(url)
 
-    # Ensure the cache directory exists
-    filename = 'cache/gog_all_games.json'
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-    if response.status_code == 200:
-        data = response.json()
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-        logger.info("Saved all games data to gog_all_games.json")
-
-
-
+        if response.status_code == 200:
+            data = response.json()
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+            logger.info(f"Saved data to {filename}")
+        else:
+            logger.error(f"Failed to fetch data from {url}. Status code: {response.status_code}")
+    except requests.RequestException as e:
+        logger.error(f"Error fetching data from {url}: {e}")
 
 def torrent_manager():
     """
@@ -164,16 +152,5 @@ def torrent_manager():
     logger.info("Starting torrent manager...")
 
     auth_validation()
-    # get_gog_recent_torrents()
-    get_gog_all_games()
-    test()
-
-    # move_completed_torrents()
-
-
-def tag(value):
-    """
-    Function to apply tag to folder name consistently based on value passed to function.
-    """
-    if value:
-        return f" ({value})"
+    fetch_gog_data("https://gog-games.to/api/web/all-games", GOG_ALL_GAMES_FILE)
+    run()
