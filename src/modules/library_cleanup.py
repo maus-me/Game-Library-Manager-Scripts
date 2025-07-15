@@ -90,8 +90,7 @@ def trim_path(path):
     :param path: The path to trim.
     :return: The trimmed path.
     """
-    if not path:
-        return ""
+
     # Split the path into parts
     parts = path.split(os.sep)
     # Return the last part and the parent directory
