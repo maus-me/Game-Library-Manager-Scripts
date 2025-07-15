@@ -89,7 +89,7 @@ def move_folder(source: str, destination: str):
         logger.error(f'Error moving {source} to {destination}: {e}')
 
 
-def new_folder(torrent_name):
+def new_folder(torrent_name: str):
     """
     Rework the folder name based on the torrent name.
     Example of original folder name: stalker_2_heart_of_chornobyl_windows_gog_(83415)
@@ -108,14 +108,12 @@ def new_folder(torrent_name):
         with open(GOG_ALL_GAMES_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        # Search the json for data["slug"] that matches the torrent_name
         for item in data:
-            # if torrent_name equals the slug, set the torrent_name to the title of the item
             if torrent_name == item['slug']:
                 new_name = item['title']
                 logger.info(f'Found an exact match: {item["slug"]} for title: {torrent_name}')
+                break
             elif torrent_name in item['slug']:
-                # If found, set the torrent_name to the title of the item
                 new_name = item['title']
                 logger.info(f'Found a partial match: {item["slug"]} for title: {torrent_name}')
     except (FileNotFoundError, json.JSONDecodeError) as e:
