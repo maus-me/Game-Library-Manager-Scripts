@@ -70,18 +70,14 @@ def move_torrent_folder(source, destination):
             except OSError as e:
                 logger.error(f"Error deleting {destination}: {e}")
                 return False
-        try:
-            os.rename(source, destination)
 
+        try:
+            shutil.move(source, destination)
             logger.info(f'Moved {source} to {destination}')
             return True
         except Exception as e:
-            logger.warning(f'Unable to instant move {source} to {destination}. Attempting to copy and delete instead.')
-            try:
-                shutil.move(source, destination)
-                return True
-            except Exception as e:
-                logger.error(f'Error moving {source}: {e}')
+            logger.error(f"Error moving {source} to {destination}: {e}")
+            return False
 
     logger.error(f'Failed to move {source} to {destination}.')
     return False
