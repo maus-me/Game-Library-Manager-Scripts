@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import shutil
-import subprocess
 
 import qbittorrentapi
 
@@ -72,7 +71,7 @@ def move_torrent_folder(source, destination):
                 logger.error(f"Error deleting {destination}: {e}")
                 return False
         try:
-            subprocess.run(['mv', source, destination], check=True)
+            shutil.move(source, destination)
             logger.info(f'Moved {source} to {destination}')
             return True
         except Exception as e:
