@@ -79,6 +79,7 @@ def move_torrent_folder(source, destination):
             logger.warning(f'Unable to instant move {source} to {destination}. Attempting to copy and delete instead.')
             try:
                 shutil.move(source, destination)
+                return True
             except Exception as e:
                 logger.error(f'Error moving {source}: {e}')
 
