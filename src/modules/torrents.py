@@ -76,6 +76,8 @@ def move_torrent_folder(source, destination):
             return True
         except Exception as e:
             logger.error(f'Error moving {source}: {e}')
+
+    logger.error(f'Failed to move {source} to {destination}.')
     return False
 
 
