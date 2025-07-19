@@ -5,7 +5,10 @@ import logging
 import os
 
 # Load modules
-from src.modules.config_parse import *
+from src.modules.config_parse import (
+    game_path, REMOVE_EXTRAS, EXTRAS_PATTERNS,
+    REMOVE_EMPTY_DIRS, REMOVE_TEXT_FILES
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +24,16 @@ def post_library_cleanup():
     # nuke()
     # reapply()
 
-    # Remove unnecessary files
-    remove_extras()
-    remove_empty()
+    # Remove unnecessary files based on configuration
+    if REMOVE_EXTRAS:
+        remove_extras()
+    else:
+        logger.info("Skipping extras removal (disabled in config)")
+
+    if REMOVE_EMPTY_DIRS:
+        remove_empty()
+    else:
+        logger.info("Skipping empty directory removal (disabled in config)")
 
 
 def remove_extras():
@@ -34,7 +44,8 @@ def remove_extras():
     """
     logger.info("Removing unnecessary files...")
 
-    zip_strings = ['soundtrack', 'ost', 'flac', 'wav', 'mp3', 'artbook', 'booklet', 'wallpaper']
+    # Use patterns from configuration
+    zip_strings = EXTRAS_PATTERNS
 
     for folder in os.listdir(game_path):
         folder_path = os.path.join(game_path, folder)
@@ -45,14 +56,13 @@ def remove_extras():
                 # calculate filesize
                 size = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
 
-                # Text file cleanup
-                if file.endswith('gog-games.to.txt'):
+                # Text file cleanup (if enabled in config)
+                if REMOVE_TEXT_FILES and file.endswith('gog-games.to.txt'):
                     try:
                         os.remove(file_path)
                         logger.info(f'Removed txt: {trim_path(file_path)} | Size: {format_size(size)}')
                     except Exception as e:
                         logger.error(f'Error removing file {file_path}: {e}')
-
 
                 # Zip file cleanup
                 if any(zip_string.lower() in file.lower() for zip_string in zip_strings) and file.endswith('.zip'):

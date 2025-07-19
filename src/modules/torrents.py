@@ -23,7 +23,8 @@ import qbittorrentapi
 # Load modules with explicit imports
 from src.modules.config_parse import (
     game_path, conn_info, QBIT_CATEGORY,
-    GOG_ALL_GAMES_FILE, GOG_ALL_GAMES_URL
+    GOG_ALL_GAMES_FILE, GOG_ALL_GAMES_URL,
+    MAX_TORRENTS_PER_RUN, DELETE_AFTER_PROCESSING
 )
 from src.modules.helpers import fetch_json_data
 
@@ -75,7 +76,7 @@ def run() -> None:
     1. Retrieves all completed torrents in the specified category
     2. Checks if they have finished seeding
     3. Renames and moves them to the game library
-    4. Deletes the torrent from qBittorrent (but not the files)
+    4. Optionally deletes the torrent from qBittorrent based on configuration
     
     Returns:
         None
@@ -83,8 +84,19 @@ def run() -> None:
     try:
         client = get_qbittorrent_client()
 
+        # Get all completed torrents in the category
+        completed_torrents = client.torrents_info(category=QBIT_CATEGORY, limit=None, status_filter='completed')
+
+        # Apply limit if configured
+        if MAX_TORRENTS_PER_RUN > 0:
+            logger.info(
+                f"Limiting to {MAX_TORRENTS_PER_RUN} torrents per run (from {len(completed_torrents)} available)")
+            completed_torrents = completed_torrents[:MAX_TORRENTS_PER_RUN]
+        else:
+            logger.info(f"Processing all {len(completed_torrents)} available torrents")
+
         # Filter for torrents in the specific category that are done seeding.
-        for torrent in client.torrents_info(category=QBIT_CATEGORY, limit=None, status_filter='completed'):
+        for torrent in completed_torrents:
             # Validate the torrent state is "Stopped".  This means that the torrent has finished downloading AND seeding.
             if torrent.state == 'stoppedUP':
                 # Log which torrents are in the category.  Includes the name, hash, and path.
@@ -104,7 +116,11 @@ def run() -> None:
                 destination = os.path.join(game_path, new_name)
 
                 if move_torrent_folder(source, destination):
-                    delete_torrent(torrent.hash)
+                    # Only delete torrent if configured to do so
+                    if DELETE_AFTER_PROCESSING:
+                        delete_torrent(torrent.hash)
+                    else:
+                        logger.info(f"Keeping torrent {name} (delete_after_processing is disabled)")
     except qbittorrentapi.LoginFailed as e:
         logger.error(f"qBittorrent login failed: {e}")
     except qbittorrentapi.APIConnectionError as e:
