@@ -1,154 +1,326 @@
-# Torrent handling module
+"""
+Torrent handling module for Game Library Manager Scripts.
+
+This module provides functionality for:
+- Connecting to qBittorrent via its API
+- Monitoring torrents in a specified category
+- Processing completed torrents by moving them to the game library
+- Renaming game folders based on GOG metadata
+- Deleting torrents from qBittorrent after processing
+
+The module uses a configuration file to determine paths, connection details,
+and other settings.
+"""
 import json
 import logging
 import os
 import shutil
+import time
+from typing import Optional
 
 import qbittorrentapi
 
-# Load modules
-from src.modules.config_parse import *
+# Load modules with explicit imports
+from src.modules.config_parse import (
+    game_path, conn_info, QBIT_CATEGORY,
+    GOG_ALL_GAMES_FILE, GOG_ALL_GAMES_URL
+)
 from src.modules.helpers import fetch_json_data
 
 logger = logging.getLogger(__name__)
 
-API_RETRY_DELAY = 3600  # 1 hour
+# Number of retries for API calls
+MAX_RETRIES = 3
+# Delay between retries in seconds
+RETRY_DELAY = 5
 
-qbt_client = qbittorrentapi.Client(**conn_info)
 
-def qbit_preflight():
+def get_qbittorrent_client() -> qbittorrentapi.Client:
+    """
+    Initialize and return a qBittorrent client.
+    
+    Returns:
+        qbittorrentapi.Client: Initialized qBittorrent client
+        
+    Raises:
+        qbittorrentapi.LoginFailed: If authentication fails
+    """
+    client = qbittorrentapi.Client(**conn_info)
+    client.auth_log_in()
+    return client
+
+
+def qbit_preflight() -> bool:
     """
     Test Authentication with qBittorrent and log the app version and web API version.
-    :return:
+    
+    Returns:
+        bool: True if authentication was successful, False otherwise
     """
     try:
-        qbt_client.auth_log_in()
-
-        logger.info(f"qBittorrent App Version: {qbt_client.app.version}")
-        logger.info(f"qBittorrent Web API: {qbt_client.app.web_api_version}")
-
+        client = get_qbittorrent_client()
+        logger.info(f"qBittorrent App Version: {client.app.version}")
+        logger.info(f"qBittorrent Web API: {client.app.web_api_version}")
+        return True
     except qbittorrentapi.LoginFailed as e:
         logger.error(f"qBittorrent Login failed: {e}")
-        exit(1)
+        return False
 
 
-def run():
+def run() -> None:
     """
-    Initial testing to see if we can retrieve torrents in a specific category that are done seeding.
-    :return:
+    Process completed torrents in the specified category.
+    
+    This function:
+    1. Retrieves all completed torrents in the specified category
+    2. Checks if they have finished seeding
+    3. Renames and moves them to the game library
+    4. Deletes the torrent from qBittorrent (but not the files)
+    
+    Returns:
+        None
     """
-    # Filter for torrents in the specific category that are done seeding.
-    for torrent in qbt_client.torrents_info(category=QBIT_CATEGORY, limit=None, status_filter='completed'):
-        # Validate the torrent state is "Stopped".  This means that the torrent has finished downloading AND seeding.
-        if torrent.state == 'stoppedUP':
-            # Log which torrents are in the category.  Includes the name, hash, and path.
-            logger.info(f'Torrent: {torrent.name} | Hash: {torrent.hash} | Path: {torrent.content_path}')
+    try:
+        client = get_qbittorrent_client()
 
-            source = torrent.content_path
-            name = torrent.name
-            # Create new folder name based on the torrent name
-            new_name = new_folder(name)
+        # Filter for torrents in the specific category that are done seeding.
+        for torrent in client.torrents_info(category=QBIT_CATEGORY, limit=None, status_filter='completed'):
+            # Validate the torrent state is "Stopped".  This means that the torrent has finished downloading AND seeding.
+            if torrent.state == 'stoppedUP':
+                # Log which torrents are in the category.  Includes the name, hash, and path.
+                logger.info(f'Torrent: {torrent.name} | Hash: {torrent.hash} | Path: {torrent.content_path}')
 
-            # Copy and Delete to the game library root path
-            destination = os.path.join(game_path, new_name)
+                source = torrent.content_path
+                name = torrent.name
+                # Create new folder name based on the torrent name
+                new_name = new_folder(name)
 
-            if move_torrent_folder(source, destination):
-                delete_torrent(torrent.hash)
+                # Skip if new_folder returned None (error occurred)
+                if new_name is None:
+                    logger.warning(f"Skipping torrent {name} due to error in new_folder()")
+                    continue
+
+                # Copy and Delete to the game library root path
+                destination = os.path.join(game_path, new_name)
+
+                if move_torrent_folder(source, destination):
+                    delete_torrent(torrent.hash)
+    except qbittorrentapi.LoginFailed as e:
+        logger.error(f"qBittorrent login failed: {e}")
+    except qbittorrentapi.APIConnectionError as e:
+        logger.error(f"qBittorrent API connection error: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error in run(): {e}")
 
 
-def move_torrent_folder(source, destination):
+def move_torrent_folder(source: str, destination: str) -> bool:
     """
     Move a torrent folder from source to destination.
-    :param source: The source path of the torrent folder.
-    :param destination: The destination path where the torrent folder should be moved.
+    
+    This function attempts to move a folder using os.rename first (which is faster),
+    and falls back to shutil.move if that fails.
+    
+    Args:
+        source: The source path of the torrent folder.
+        destination: The destination path where the torrent folder should be moved.
+        
+    Returns:
+        bool: True if the folder was successfully moved, False otherwise.
     """
-    if os.path.isdir(source):
-        if os.path.exists(destination):
-            try:
-                logger.info(f'Deleting existing version: {destination}')
-                shutil.rmtree(destination)
-            except OSError as e:
-                logger.error(f"Error deleting {destination}: {e}")
-                return False
+    # Check if source exists
+    if not os.path.exists(source):
+        logger.error(f"Source path does not exist: {source}")
+        return False
+
+    # Check if source is a directory
+    if not os.path.isdir(source):
+        logger.error(f"Source is not a directory: {source}")
+        return False
+
+    # Handle existing destination
+    if os.path.exists(destination):
         try:
-            os.rename(source, destination)
+            logger.info(f'Deleting existing version: {destination}')
+            shutil.rmtree(destination)
+        except OSError as e:
+            logger.error(f"Error deleting {destination}: {e}")
+            return False
 
-            logger.info(f'Moved {source} to {destination}')
+    # Try to move using os.rename (fast)
+    try:
+        os.rename(source, destination)
+        logger.info(f'Moved {source} to {destination}')
+        return True
+    except OSError as e:
+        logger.warning(f'Unable to use os.rename to move {source} to {destination}: {e}')
+        logger.warning('Attempting to use shutil.move instead (slower but more robust).')
+
+        # Fall back to shutil.move (slower but more robust)
+        try:
+            shutil.move(source, destination)
+            logger.info(f'Moved {source} to {destination} using shutil.move')
             return True
-        except Exception as e:
-            logger.warning(f'Unable to instant move {source} to {destination}. Attempting to copy and delete instead.')
-            try:
-                shutil.move(source, destination)
-                return True
-            except Exception as e:
-                logger.error(f'Error moving {source}: {e}')
+        except (OSError, shutil.Error) as e:
+            logger.error(f'Error moving {source} using shutil.move: {e}')
+            return False
+    except Exception as e:
+        logger.error(f'Unexpected error moving {source}: {e}')
+        return False
 
-    logger.error(f'Failed to move {source} to {destination}.')
+
+def delete_torrent(torrent_hash: str) -> bool:
+    """
+    Delete a torrent from qBittorrent by its hash.
+    
+    Args:
+        torrent_hash: The hash of the torrent to delete.
+        
+    Returns:
+        bool: True if the torrent was successfully deleted, False otherwise.
+    """
+    for attempt in range(MAX_RETRIES):
+        try:
+            client = get_qbittorrent_client()
+            client.torrents_delete(torrent_hashes=torrent_hash, delete_files=False)
+            logger.info(f"Deleted torrent with hash: {torrent_hash}")
+            return True
+        except qbittorrentapi.LoginFailed as e:
+            logger.error(f"qBittorrent login failed: {e}")
+            return False
+        except qbittorrentapi.APIConnectionError as e:
+            logger.error(
+                f"Failed to delete torrent with hash {torrent_hash} (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+            if attempt < MAX_RETRIES - 1:
+                logger.info(f"Retrying in {RETRY_DELAY} seconds...")
+                time.sleep(RETRY_DELAY)
+            else:
+                logger.error(f"Max retries reached. Failed to delete torrent with hash {torrent_hash}")
+                return False
+        except Exception as e:
+            logger.error(f"Unexpected error deleting torrent with hash {torrent_hash}: {e}")
+            return False
+
     return False
 
 
-def delete_torrent(torrent_hash):
-    """
-    Delete a torrent from qBittorrent by its hash.
-    :param torrent_hash: The hash of the torrent to delete.
-    """
-    try:
-        qbt_client.torrents_delete(torrent_hashes=torrent_hash, delete_files=False)
-        logger.info(f"Deleted torrent with hash: {torrent_hash}")
-    except qbittorrentapi.APIConnectionError as e:
-        logger.error(f"Failed to delete torrent with hash {torrent_hash}: {e}")
-
-def new_folder(torrent_name):
+def new_folder(torrent_name: str) -> Optional[str]:
     """
     Rework the folder name based on the torrent name.
+    
+    This function:
+    1. Cleans up the torrent name by removing platform-specific parts
+    2. Looks up the game in the GOG games database to get the proper title
+    3. Removes special characters from the title
+    
     Example of original folder name: stalker_2_heart_of_chornobyl_windows_gog_(83415)
-
-    :return: new folder name based on the torrent name.
+    
+    Args:
+        torrent_name: The original torrent folder name
+        
+    Returns:
+        Optional[str]: The new folder name, or None if an error occurred
     """
+    if not torrent_name:
+        logger.error("Empty torrent name provided")
+        return None
+
+    logger.info(f"Processing torrent name: {torrent_name}")
     new_name = torrent_name
 
     # Remove everything after the first underscore in _windows_gog_
     if '_windows_gog_' in new_name:
         new_name = torrent_name.split('_windows_gog_')[0]
+        logger.debug(f"Removed platform suffix: {new_name}")
 
-    # Search cache/gog_recent_torrents.json for the torrent slug
+    # Search for the game in the GOG games database
     try:
+        # Check if the GOG games file exists
+        if not os.path.isfile(GOG_ALL_GAMES_FILE):
+            logger.warning(f"{GOG_ALL_GAMES_FILE} not found. Fetching data from API...")
+            fetch_json_data(GOG_ALL_GAMES_URL, GOG_ALL_GAMES_FILE)
+            
         with open(GOG_ALL_GAMES_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            logger.info(f"Loaded {GOG_ALL_GAMES_FILE}.")
+            logger.info(f"Loaded {GOG_ALL_GAMES_FILE} with {len(data)} games.")
 
-        # Search the json for data["slug"] that matches the torrent_name
+        # First try to find an exact match
+        exact_match = False
         for item in data:
-            # if torrent_name equals the slug, set the torrent_name to the title of the item
-            if new_name == item['slug']:
-                new_name = item['title']
-                logger.info(f'Found exact match: {item["slug"]} for title: {new_name}')
+            if new_name == item.get('slug'):
+                new_name = item.get('title')
+                logger.info(f'Found exact match: {item.get("slug")} for title: {new_name}')
+                exact_match = True
                 break
-            elif new_name in item['slug']:
-                # If found, set the torrent_name to the title of the item
-                new_name = item['title']
-                logger.info(f'Found partial match: {item["slug"]} for title: {new_name}')
+
+        # Only try partial matches if no exact match was found
+        if not exact_match:
+            # Sort items by slug length to prefer shorter/closer matches
+            # This helps avoid matching with DLCs or similar named games
+            sorted_items = sorted(data, key=lambda x: len(x.get('slug', '')))
+
+            for item in sorted_items:
+                slug = item.get('slug', '')
+                if slug and new_name in slug:
+                    # Check if it's a reasonable match (avoid matching with DLCs)
+                    # For example, if new_name is "witcher", don't match with "witcher-3-dlc"
+                    if len(slug) <= len(new_name) + 10:  # Allow some flexibility
+                        new_name = item.get('title')
+                        logger.info(f'Found partial match: {slug} for title: {new_name}')
+                        break
+    except json.JSONDecodeError as e:
+        logger.error(f"Error parsing {GOG_ALL_GAMES_FILE}: {e}")
+        return None
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {GOG_ALL_GAMES_FILE}: {e}")
+        return None
     except Exception as e:
-        logger.error(f"Error loading {GOG_ALL_GAMES_FILE}. {e}")
+        logger.error(f"Error processing {GOG_ALL_GAMES_FILE}: {e}")
         return None
 
     # Remove copyright characters and other unwanted characters that may appear in the metadata.
     for char in '©®™':
         new_name = new_name.replace(char, '')
 
+    # Remove leading/trailing whitespace
+    new_name = new_name.strip()
+
+    # If we end up with an empty string, use the original name
+    if not new_name:
+        logger.warning(f"New name is empty, using original: {torrent_name}")
+        new_name = torrent_name
+
     logger.info(f'Renamed folder: {torrent_name} to {new_name}')
     return new_name
 
 
-
-
-def torrent_manager():
+def torrent_manager() -> None:
     """
     Manage torrents by renaming folders and moving completed torrents to the game library root path.
-    :return:
+    
+    This function:
+    1. Checks the connection to qBittorrent
+    2. Fetches the latest game data from GOG
+    3. Processes completed torrents
+    
+    Returns:
+        None
     """
     logger.info("Starting torrent manager...")
 
-    qbit_preflight()
-    fetch_json_data(GOG_ALL_GAMES_URL, GOG_ALL_GAMES_FILE)
+    # Check qBittorrent connection
+    if not qbit_preflight():
+        logger.error("qBittorrent preflight check failed. Exiting torrent manager.")
+        return
+
+    # Ensure we have the latest game data
+    try:
+        logger.info(f"Fetching latest game data from {GOG_ALL_GAMES_URL}")
+        fetch_json_data(GOG_ALL_GAMES_URL, GOG_ALL_GAMES_FILE)
+    except Exception as e:
+        logger.error(f"Error fetching game data: {e}")
+        logger.warning("Continuing with existing game data if available...")
+
+    # Process completed torrents
     run()
+
+    logger.info("Torrent manager completed")
