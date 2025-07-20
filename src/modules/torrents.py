@@ -22,7 +22,7 @@ import qbittorrentapi
 
 # Load modules with explicit imports
 from src.modules.config_parse import (
-    game_path, conn_info, QBIT_CATEGORY,
+    GAME_PATH, conn_info, QBIT_CATEGORY,
     GOG_ALL_GAMES_FILE, GOG_ALL_GAMES_URL,
     MAX_TORRENTS_PER_RUN, DELETE_AFTER_PROCESSING
 )
@@ -113,7 +113,7 @@ def run() -> None:
                     continue
 
                 # Copy and Delete to the game library root path
-                destination = os.path.join(game_path, new_name)
+                destination = os.path.join(GAME_PATH, new_name)
 
                 if move_torrent_folder(source, destination):
                     # Only delete torrent if configured to do so

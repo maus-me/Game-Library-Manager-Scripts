@@ -6,7 +6,7 @@ import os
 
 # Load modules
 from src.modules.config_parse import (
-    game_path, REMOVE_EXTRAS, EXTRAS_PATTERNS,
+    GAME_PATH, REMOVE_EXTRAS, EXTRAS_PATTERNS,
     REMOVE_EMPTY_DIRS, REMOVE_TEXT_FILES
 )
 
@@ -47,8 +47,8 @@ def remove_extras():
     # Use patterns from configuration
     zip_strings = EXTRAS_PATTERNS
 
-    for folder in os.listdir(game_path):
-        folder_path = os.path.join(game_path, folder)
+    for folder in os.listdir(GAME_PATH):
+        folder_path = os.path.join(GAME_PATH, folder)
         if os.path.isdir(folder_path):
             for file in os.listdir(folder_path):
                 file_path = os.path.join(folder_path, file)
@@ -83,8 +83,8 @@ def remove_empty():
     """
     logger.info("Removing empty directories...")
 
-    for folder in os.listdir(game_path):
-        folder_path = os.path.join(game_path, folder)
+    for folder in os.listdir(GAME_PATH):
+        folder_path = os.path.join(GAME_PATH, folder)
         if os.path.isdir(folder_path):
             # Check if the directory is empty
             if not os.listdir(folder_path):
