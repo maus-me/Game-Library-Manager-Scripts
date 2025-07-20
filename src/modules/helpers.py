@@ -37,3 +37,17 @@ def fetch_json_data(url, filename):
             logger.error(f"Failed to fetch data from {url}. Status code: {response.status_code}")
     except requests.RequestException as e:
         logger.error(f"Error fetching data from {url}: {e}")
+
+
+def format_size(size, suffix="B"):
+    """
+    Format the size in a human-readable format.
+    :param suffix: The suffix to append to the size (default is "B" for bytes).
+    :param size: The size in bytes.
+    :return:
+    """
+    for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
+        if abs(size) < 1024.0:
+            return f"{size:3.1f}{unit}{suffix}"
+        size /= 1024.0
+    return f"{size:.1f}Yi{suffix}"

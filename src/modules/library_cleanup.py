@@ -1,6 +1,4 @@
 # Game library cleanup module
-
-
 import logging
 import os
 
@@ -9,6 +7,7 @@ from src.modules.config_parse import (
     GAME_PATH, REMOVE_EXTRAS, EXTRAS_PATTERNS,
     REMOVE_EMPTY_DIRS, REMOVE_TEXT_FILES
 )
+from src.modules.helpers import format_size
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +18,6 @@ def post_library_cleanup():
     :return:
     """
     logger.info("Post-library cleanup...")
-
-    # <DANGEROUS> This will rename the directories in the game library root path.
-    # nuke()
-    # reapply()
 
     # Remove unnecessary files based on configuration
     if REMOVE_EXTRAS:
@@ -106,17 +101,3 @@ def trim_path(path):
     # Return the last part and the parent directory
     # TODO: Review this code, it might not work as expected in all cases
     return os.path.join(parts[-2], parts[-1]) if len(parts) > 1 else parts[-1]
-
-
-def format_size(size, suffix="B"):
-    """
-    Format the size in a human-readable format.
-    :param suffix: The suffix to append to the size (default is "B" for bytes).
-    :param size: The size in bytes.
-    :return:
-    """
-    for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
-        if abs(size) < 1024.0:
-            return f"{size:3.1f}{unit}{suffix}"
-        size /= 1024.0
-    return f"{size:.1f}Yi{suffix}"
