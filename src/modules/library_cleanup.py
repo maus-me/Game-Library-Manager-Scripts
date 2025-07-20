@@ -28,12 +28,12 @@ def post_library_cleanup():
     if REMOVE_EXTRAS:
         remove_extras()
     else:
-        logger.info("Skipping extras removal (disabled in config)")
+        logger.info("Skipping extras removal.")
 
     if REMOVE_EMPTY_DIRS:
         remove_empty()
     else:
-        logger.info("Skipping empty directory removal (disabled in config)")
+        logger.info("Skipping empty directory removal.")
 
 
 def remove_extras():

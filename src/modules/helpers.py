@@ -14,6 +14,8 @@ def tag(value):
     if value:
         return f" ({value})"
 
+    return None
+
 
 def fetch_json_data(url, filename):
     """
