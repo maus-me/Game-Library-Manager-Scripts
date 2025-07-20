@@ -3,7 +3,7 @@ import logging
 import os
 
 
-def setup_logging(level=logging.INFO):
+def setup_logging(level=logging.INFO, log_file_path='logs/logs.log'):
     # Configure the root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
@@ -25,18 +25,17 @@ def setup_logging(level=logging.INFO):
     root_logger.addHandler(console_handler)
 
     # Create a directory for logs if it doesn't exist
-    log_dir = 'logs'
+    log_dir = os.path.dirname(log_file_path) or '.'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    # Create logs.log file if it doesn't exist
-    log_file_path = os.path.join(log_dir, 'logs.log')
+    # Create log file if it doesn't exist
     if not os.path.exists(log_file_path):
         with open(log_file_path, 'w') as f:
             pass  # Create an empty file
 
-    # Add file handler if needed
-    file_handler = logging.FileHandler('logs/logs.log')
+    # Add file handler
+    file_handler = logging.FileHandler(log_file_path)
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)

@@ -96,8 +96,9 @@ def get_config_value(config_parser: configparser.ConfigParser, section: str, opt
 config_parser = load_config()
 
 # Admin section
-game_path = get_config_value(config_parser, "admin", "game_library_root_path")
-torrent_path = get_config_value(config_parser, "admin", "torrents_completed_root_path")
+game_path = get_config_value(config_parser, "admin", "game_library_root_path", "/data/library/")
+torrent_path = get_config_value(config_parser, "admin", "torrents_completed_root_path", "/data/torrent/")
+LOG_FILE_PATH = get_config_value(config_parser, "admin", "log_file_path", "logs/logs.log")
 WAIT_TIME = get_config_value(config_parser, "admin", "wait_time_hours", 4, "int")
 ON_STARTUP = get_config_value(config_parser, "admin", "on_startup", True, "bool")
 DEBUG_LOGGING = get_config_value(config_parser, "admin", "debug_logging", False, "bool")
@@ -134,6 +135,7 @@ __all__ = [
     # Admin section
     "game_path",
     "torrent_path",
+    "LOG_FILE_PATH",
     "WAIT_TIME",
     "ON_STARTUP",
     "DEBUG_LOGGING",

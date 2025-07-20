@@ -7,7 +7,7 @@ from src.modules.library_cleanup import post_library_cleanup
 from src.modules.torrents import torrent_manager
 
 # Configure logging before importing other modules
-setup_logging()
+setup_logging(log_file_path=LOG_FILE_PATH)
 
 import logging
 
@@ -19,7 +19,6 @@ def run():
     post_library_cleanup()
 
 def main():
-    logging.basicConfig(filename='logs/logs.log', level=logging.INFO)
     logger.info("Starting the application...")
 
     if ON_STARTUP:
