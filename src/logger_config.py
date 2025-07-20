@@ -1,9 +1,10 @@
 # src/logger_config.py
 import logging
 import os
+from logging.handlers import RotatingFileHandler
 
 
-def setup_logging(level=logging.INFO, log_file_path='logs/logs.log'):
+def setup_logging(level=logging.INFO, log_file_path='logs/logs.log', max_bytes=5 * 1024 * 1024, backup_count=5):
     # Configure the root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
@@ -34,8 +35,10 @@ def setup_logging(level=logging.INFO, log_file_path='logs/logs.log'):
         with open(log_file_path, 'w') as f:
             pass  # Create an empty file
 
-    # Add file handler
-    file_handler = logging.FileHandler(log_file_path)
+    # Add rotating file handler
+    file_handler = RotatingFileHandler(
+        log_file_path, maxBytes=max_bytes, backupCount=backup_count
+    )
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)
