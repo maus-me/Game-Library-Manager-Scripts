@@ -21,7 +21,7 @@ including torrent management, library cleanup, and logging.
    ```
 
 2. **Configure the application**  
-   Edit `src/config.cfg` to set your paths and preferences (see below).
+   Edit `config.cfg` to set your paths and preferences.
 
 3. **Run the application**:
    ```
