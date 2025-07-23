@@ -11,11 +11,7 @@ def tag(value):
     """
     Function to apply tag to folder name consistently based on value passed to function.
     """
-    if value:
-        return f" ({value})"
-
-    return None
-
+    return f" ({value})" if value else None
 
 def fetch_json_data(url, filename):
     """
@@ -24,19 +20,26 @@ def fetch_json_data(url, filename):
     :param filename: File path to save the fetched data.
     """
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()  # Raise exception for non-200 status codes
 
+        # Create directory structure if it doesn't exist
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-        if response.status_code == 200:
-            data = response.json()
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=4)
-            logger.info(f"Saved data to {filename}")
-        else:
-            logger.error(f"Failed to fetch data from {url}. Status code: {response.status_code}")
+        # Save data to file
+        data = response.json()
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+        logger.info(f"Saved data to {filename}")
+        return True
+
     except requests.RequestException as e:
         logger.error(f"Error fetching data from {url}: {e}")
+        return False
+    except (json.JSONDecodeError, OSError) as e:
+        logger.error(f"Error processing data from {url}: {e}")
+        return False
 
 
 def format_size(size, suffix="B"):
