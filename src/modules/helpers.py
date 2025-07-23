@@ -46,8 +46,11 @@ def format_size(size, suffix="B"):
     :param size: The size in bytes.
     :return:
     """
-    for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
+    units = ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi")
+
+    for unit in units:
         if abs(size) < 1024.0:
             return f"{size:3.1f}{unit}{suffix}"
         size /= 1024.0
+
     return f"{size:.1f}Yi{suffix}"
