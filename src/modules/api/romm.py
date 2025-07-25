@@ -1,5 +1,6 @@
 import base64
 import logging
+from typing import Dict, List, Optional
 
 import requests
 
@@ -14,17 +15,33 @@ class RommAPI:
         self.username = ROMM_API_USERNAME
         self.password = ROMM_API_PASSWORD
         self.slug = ROMM_PLATFORM_SLUG
-        self.url = ROMM_API_URL
-        self.headers = {}
+        self.base_url = ROMM_API_URL
+        self.headers = self._create_auth_headers()
 
-        # Shamelessly copied from muos-app
+    def _create_auth_headers(self) -> Dict[str, str]:
+        """Create authentication headers using Basic Auth."""
         if self.username and self.password:
             credentials = f"{self.username}:{self.password}"
             auth_token = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
-            self.headers = {"Authorization": f"Basic {auth_token}"}
+            return {"Authorization": f"Basic {auth_token}"}
+        return {}
 
     def _request(self, method, endpoint, **kwargs):
-        url = f"{self.url}{endpoint}"
+        """
+        Send a request to the ROMM API.
+
+        Args:
+            method: HTTP method to use
+            endpoint: API endpoint path
+            **kwargs: Additional arguments to pass to requests.request
+
+        Returns:
+            JSON response data or None if no content
+
+        Raises:
+            requests.RequestException: If the request fails
+        """
+        url = f"{self.base_url}{endpoint}"
         try:
             # Ensure headers are included in each request
             if 'headers' in kwargs:
@@ -41,60 +58,94 @@ class RommAPI:
             logger.error(f"Request failed: {method} {url} - {e}")
             raise
 
-    # Delete Game Endpoint POST: /api/roms/delete
-    # Json: {"roms":[{game_id}, {game_id}, {game_id}],"delete_from_fs":[]}
-    def delete_games(self, game_ids):
+    def delete_games(self, game_ids: List[int]) -> Optional[Dict]:
+        """
+        Delete games from ROMM.
+
+        Args:
+            game_ids: List of game IDs to delete
+
+        Returns:
+            API response
+        """
         data = {"roms": game_ids, "delete_from_fs": []}
         logger.info(f"Deleting {len(game_ids)} empty ROMMs...")
         return self._request("POST", "/api/roms/delete", json=data)
 
     # Get Game Endpoint GET: /api/roms/{game_id}
-    def get_game_by_id(self, game_id):
+    def get_game_by_id(self, game_id: int) -> Optional[Dict]:
+        """
+        Retrieve game details by ID.
+
+        Args:
+            game_id: ID of the game to retrieve
+
+        Returns:
+            Game details
+        """
         return self._request("GET", f"/api/roms/{game_id}")
 
-    def heartbeat(self):
+    def heartbeat(self) -> Optional[Dict]:
         """
-        Sends a heartbeat request to the ROMM API to keep the session alive.
+        Send a heartbeat request to keep the session alive.
+
+        Returns:
+            Heartbeat response
         """
         return self._request("GET", "/api/heartbeat")
 
-    def get_profile(self):
+    def get_profile(self) -> Optional[Dict]:
         """
-        Retrieves the profile information of the authenticated user.
+        Retrieve authenticated user profile information.
+
+        Returns:
+            User profile data
         """
         return self._request("GET", "/api/users/me")
 
-    def get_config(self):
+    def get_config(self) -> Optional[Dict]:
         """
-        Retrieves the configuration settings from the ROMM API.
+        Retrieve ROMM configuration settings.
+
+        Returns:
+            Configuration settings
         """
         return self._request("GET", "/api/config")
 
     # Get Platforms Endpoint GET: /api/platforms
-    def get_platforms(self):
+    def get_platforms(self) -> Optional[List[Dict]]:
         """
-        Retrieves the list of platforms from the ROMM API.
-        :return: A list of platforms in json.
+        Retrieve list of platforms from ROMM.
+
+        Returns:
+            List of platforms
         """
         return self._request("GET", "/api/platforms")
 
-    def get_collections(self):
+    def get_collections(self) -> Optional[List[Dict]]:
         """
-        Retrieves the manually created collections from the ROMM API.
-        """
+        Retrieve manually created collections.
 
+        Returns:
+            List of collections
+        """
         return self._request("GET", "/api/collections")
 
-    def get_virtual_collections(self):
+    def get_virtual_collections(self) -> Optional[List[Dict]]:
         """
-        Retrieves the virtual collections from the ROMM API.
+        Retrieve virtual collections.
+
+        Returns:
+            List of virtual collections
         """
         return self._request("GET", "/api/collections/virtual?type=collection")
 
-    def get_platform_by_slug(self):
+    def get_platform_by_slug(self) -> Optional[int]:
         """
-        Retrieves a platform by its slug.
-        :return: The platform id if found, otherwise None.
+        Retrieve platform ID by configured slug.
+
+        Returns:
+            Platform ID if found, otherwise None
         """
         platforms = self.get_platforms()
         if platforms:
@@ -103,26 +154,32 @@ class RommAPI:
                     return platform.get('id')
         return None
 
-    def filter_games(self, platform_id=None, limit=None, **kwargs):
+    def filter_games(self,
+                     platform_id: Optional[int] = None,
+                     limit: Optional[int] = None,
+                     offset: Optional[int] = None,
+                     order_by: Optional[str] = None,
+                     order_dir: Optional[str] = None,
+                     **kwargs
+                     ) -> Optional[List[Dict]]:
         """
-        Filters games based on various parameters.
-        :param platform_id: The ID of the platform to filter by.
-        :param limit: The maximum number of games to return.
-        :param offset: The offset for pagination.
-        :param order_by: The field to order the results by.
-        :param order_dir: The direction of the ordering (asc or desc).
-        :param group_by_meta_id: Whether to group by meta ID.
-        :return: A list of filtered games.
+        Filter games based on various parameters.
+
+        Args:
+            platform_id: Platform ID to filter by
+            limit: Maximum number of games to return
+            offset: Pagination offset
+            order_by: Field to order results by
+            order_dir: Direction of ordering (asc/desc)
+            group_by_meta_id: Whether to group by meta ID
+            **kwargs: Additional filter parameters
+
+        Returns:
+            List of filtered games
         """
 
-        params = {
-            # "platform_id": platform_id,
-            # "limit": limit,
-            # "offset": offset,
-            # "order_by": order_by,
-            # "order_dir": order_dir,
-            # "group_by_meta_id": str(group_by_meta_id).lower()
-        }
+        params = {}
+
         if platform_id is not None:
             params['platform_id'] = platform_id
 
@@ -135,31 +192,13 @@ class RommAPI:
 
     @staticmethod
     def test():
-        heartbeat = RommAPI().heartbeat()
-        # print(f"Heartbeat response: {heartbeat}")
-
-        get_game_by_id = RommAPI().get_game_by_id(38567)
-        # print(f"Get game by ID response: {get_game_by_id}")
-
-        get_profile = RommAPI().get_profile()
-        # print(f"Get profile response: {get_profile}")
-
-        get_config = RommAPI().get_config()
-        # print(f"Get config response: {get_config}")
-
-        # get_platforms = RommAPI().get_platforms()
-        # print(f"Get platforms response: {get_platforms}")
-
-        get_collections = RommAPI().get_collections()
-        # print(f"Get collections response: {get_collections}")
-
-        get_virtual_collections = RommAPI().get_virtual_collections()
-        # print(f"Get virtual collections response: {get_virtual_collections}")
-
-        get_platform_by_slug = RommAPI().get_platform_by_slug()
-        # print(f"Get platform by slug response: {get_platform_by_slug}")
-
-        # delete_games = RommAPI().delete_games([34691])
-
-        filter_games = RommAPI().filter_games()
-        # print(f"Filter games response: {pprint.pprint(filter_games)}")
+        """Test various API endpoints."""
+        api = RommAPI()
+        api.heartbeat()
+        api.get_game_by_id(38567)
+        api.get_profile()
+        api.get_config()
+        api.get_collections()
+        api.get_virtual_collections()
+        api.get_platform_by_slug()
+        api.filter_games()
