@@ -25,6 +25,11 @@ def main():
     """Main application loop that runs on schedule."""
     logger.info("Starting the application...")
 
+    if TESTING:
+        logger.info("Running tests mode...")
+        test()
+        return
+
     if ON_STARTUP:
         logger.info("Running torrent manager on startup...")
         run()

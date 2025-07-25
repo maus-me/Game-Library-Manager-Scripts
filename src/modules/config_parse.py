@@ -102,6 +102,7 @@ LOG_FILE_PATH = get_config_value(config_parser, "admin", "log_file_path", "logs/
 WAIT_TIME = get_config_value(config_parser, "admin", "wait_time_hours", 4, "int")
 ON_STARTUP = get_config_value(config_parser, "admin", "on_startup", True, "bool")
 DEBUG_LOGGING = get_config_value(config_parser, "admin", "debug_logging", False, "bool")
+TESTING = get_config_value(config_parser, "admin", "testing", False, "bool")
 
 # qBittorrent section
 conn_info = {
@@ -152,6 +153,7 @@ __all__ = [
     "WAIT_TIME",
     "ON_STARTUP",
     "DEBUG_LOGGING",
+    "TESTING",
 
     # qBittorrent section
     "conn_info",
