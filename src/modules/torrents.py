@@ -68,7 +68,7 @@ def qbit_preflight() -> bool:
         return False
 
 
-def run() -> None:
+def torrent_manager() -> None:
     """
     Process completed torrents in the specified category.
     
@@ -309,7 +309,7 @@ def new_folder(torrent_name: str) -> Optional[str]:
     return new_name
 
 
-def torrent_manager() -> None:
+def run() -> None:
     """
     Manage torrents by renaming folders and moving completed torrents to the game library root path.
     
