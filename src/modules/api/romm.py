@@ -124,8 +124,7 @@ class RommAPI:
             # "order_dir": order_dir,
             # "group_by_meta_id": str(group_by_meta_id).lower()
         }
-        if platform_id is None:
-            platform_id = self.get_platform_by_slug()
+        if platform_id is not None:
             params['platform_id'] = platform_id
 
         if limit is not None:

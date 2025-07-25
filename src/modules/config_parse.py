@@ -131,6 +131,7 @@ ROMM_API_PASSWORD = get_config_value(config_parser, "romm", "password", "passwor
 ROMM_API_URL = get_config_value(config_parser, "romm", "url", "http://localhost:8000")
 ROMM_PLATFORM_SLUG = get_config_value(config_parser, "romm", "platform_slug", "win")
 ROMM_EMPTY_DIRS = get_config_value(config_parser, "romm", "empty_dirs", True, "bool")
+ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC = get_config_value(config_parser, "romm", "empty_dirs_library_specific", True, "bool")
 ROMM_SCAN_DANGEROUS_FILETYPES = get_config_value(config_parser, "romm", "scan_dangerous_filetypes", True, "bool")
 ROMM_MISSING_EXE = get_config_value(config_parser, "romm", "missing_exe", True, "bool")
 ROMM_DELETE_AFTER_IMPORT = get_config_value(config_parser, "romm", "delete_old_after_import", True, "bool")
@@ -181,6 +182,7 @@ __all__ = [
     "ROMM_MISSING_EXE",
     "ROMM_DELETE_AFTER_IMPORT",
     "ROMM_SCAN_AFTER_IMPORT",
+    "ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC",
 
 
     # Cleanup section

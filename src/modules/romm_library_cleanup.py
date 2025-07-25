@@ -3,6 +3,7 @@ import logging
 
 from src.modules.api.romm import RommAPI
 from src.modules.config_parse import *
+from src.modules.config_parse import ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,12 @@ def find_empty():
     logger.info("Removing empty directories...")
     romm_api = RommAPI()
 
-    data = romm_api.filter_games(offset=0, order_by="fs_size_bytes", order_dir="asc", group_by_meta_id=True)
+    if ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC:
+        logger.info("Removing empty directories specific to the ROMM library...")
+        platform_id = RommAPI().get_platform_by_slug()
+
+    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+                                 group_by_meta_id=True)
     game_ids = []
 
     for item in data.get('items', []):
