@@ -3,7 +3,7 @@ import logging
 import time
 
 from src.logger_config import setup_logging
-from src.modules import romm_library_cleanup
+from src.modules import romm_library_cleanup, torrents, library_cleanup
 from src.modules.api.romm import RommAPI
 from src.modules.config_parse import LOG_FILE_PATH, ON_STARTUP, WAIT_TIME, TESTING
 
@@ -17,8 +17,8 @@ def test():
 
 
 def run():
-    # torrents.run()
-    # library_cleanup.run()
+    torrents.run()
+    library_cleanup.run()
     romm_library_cleanup.run()
 
 def main():

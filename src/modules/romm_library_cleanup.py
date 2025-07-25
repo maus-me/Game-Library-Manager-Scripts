@@ -74,13 +74,13 @@ def find_fragmented():
     for item in data.get('items', []):
         if item.get(
                 'fs_size_bytes') <= 1100:  # 1.1 KB, should be smaller than the smallest legitimate game file. This value specifically is what an XCI missing its actual game file is.
-            logger.info(f"Found empty ROMM: {item.get('name')} (ID: {item.get('id')})")
+            logger.info(f"Found fragmented ROMM: {item.get('name')} (ID: {item.get('id')})")
             # add the game ID to the list for deletion
             game_ids.append(item.get('id'))
 
     if game_ids:
         logger.info(f"Deleting empty ROMMs: {len(game_ids)} found.")
-        # romm_api.delete_games(game_ids)
+        romm_api.delete_games(game_ids)
     else:
         logger.info("No empty ROMMs found.")
 
