@@ -17,6 +17,7 @@ def run():
         if ROMM_EMPTY_DIRS:
             find_empty()
             find_missing_exe()
+            find_dangerous_filetypes()
         logger.info("ROMM library cleanup completed.")
     else:
         logger.info("ROMM library cleanup is disabled in the configuration. Skipping...")
@@ -39,6 +40,8 @@ def find_empty():
     if game_ids:
         logger.info(f"Deleting empty ROMMs: {len(game_ids)} found.")
         romm_api.delete_games(game_ids)
+    else:
+        logger.info("No empty ROMMs found.")
 
 
 def find_missing_exe():
@@ -67,6 +70,8 @@ def find_missing_exe():
     if game_ids:
         logger.info(f"Deleting ROMMs with missing executables: {len(game_ids)} found.")
         romm_api.delete_games(game_ids)
+    else:
+        logger.info("No ROMMs with missing executables found.")
 
 
 def find_dangerous_filetypes():
@@ -91,3 +96,5 @@ def find_dangerous_filetypes():
 
     if game_ids:
         logger.info(f"ROMMs with dangerous files: {len(game_ids)} found.")
+    else:
+        logger.info("No ROMMs with dangerous files found.")
