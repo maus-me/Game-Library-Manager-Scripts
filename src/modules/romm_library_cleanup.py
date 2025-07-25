@@ -64,7 +64,7 @@ def find_fragmented():
     platform_id = None
 
     if ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC:
-        logger.info("Removing empty directories specific to the ROMM library...")
+        logger.info("Removing fragmented directories specific to the ROMM library...")
         platform_id = RommAPI().get_platform_by_slug()
 
     data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",

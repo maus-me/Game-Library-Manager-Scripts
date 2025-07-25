@@ -24,7 +24,7 @@ import qbittorrentapi
 from src.modules.config_parse import (
     GAME_PATH, conn_info, QBIT_CATEGORY,
     GOG_ALL_GAMES_FILE, GOG_ALL_GAMES_URL,
-    MAX_TORRENTS_PER_RUN, DELETE_AFTER_PROCESSING
+    MAX_TORRENTS_PER_RUN, DELETE_AFTER_PROCESSING, QBIT_ENABLE
 )
 from src.modules.helpers import fetch_json_data
 
@@ -321,22 +321,25 @@ def run():
     Returns:
         None
     """
-    logger.info("Starting torrent manager...")
+    if QBIT_ENABLE:
+        logger.info("Starting torrent manager...")
 
-    # Check qBittorrent connection
-    if not qbit_preflight():
-        logger.error("qBittorrent preflight check failed. Exiting torrent manager.")
-        return
+        # Check qBittorrent connection
+        if not qbit_preflight():
+            logger.error("qBittorrent preflight check failed. Exiting torrent manager.")
+            return
 
-    # Ensure we have the latest game data
-    try:
-        logger.info(f"Fetching latest game data from {GOG_ALL_GAMES_URL}")
-        fetch_json_data(GOG_ALL_GAMES_URL, GOG_ALL_GAMES_FILE)
-    except Exception as e:
-        logger.error(f"Error fetching game data: {e}")
-        logger.warning("Continuing with existing game data if available...")
+        # Ensure we have the latest game data
+        try:
+            logger.info(f"Fetching latest game data from {GOG_ALL_GAMES_URL}")
+            fetch_json_data(GOG_ALL_GAMES_URL, GOG_ALL_GAMES_FILE)
+        except Exception as e:
+            logger.error(f"Error fetching game data: {e}")
+            logger.warning("Continuing with existing game data if available...")
 
-    # Process completed torrents
-    torrent_manager()
+        # Process completed torrents
+        torrent_manager()
 
-    logger.info("Torrent manager completed")
+        logger.info("Torrent manager completed")
+    else:
+        logger.info("Torrent manager is disabled in the configuration. Skipping...")

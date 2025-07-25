@@ -105,6 +105,7 @@ DEBUG_LOGGING = get_config_value(config_parser, "admin", "debug_logging", False,
 TESTING = get_config_value(config_parser, "admin", "testing", False, "bool")
 
 # qBittorrent section
+QBIT_ENABLE = get_config_value(config_parser, "qbittorrent", "enable", True, "bool")
 conn_info = {
     "host": get_config_value(config_parser, "qbittorrent", "host", "localhost"),
     "port": get_config_value(config_parser, "qbittorrent", "port", 8080, "int"),
