@@ -16,7 +16,9 @@ def run():
         logger.info("Starting ROMM library cleanup...")
         if ROMM_EMPTY_DIRS:
             find_empty()
+        if ROMM_MISSING_EXE:
             find_missing_exe()
+        if ROMM_SCAN_DANGEROUS_FILETYPES:
             find_dangerous_filetypes()
         logger.info("ROMM library cleanup completed.")
     else:
