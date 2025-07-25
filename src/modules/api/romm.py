@@ -158,10 +158,10 @@ class RommAPI:
         get_virtual_collections = RommAPI().get_virtual_collections()
         # print(f"Get virtual collections response: {get_virtual_collections}")
 
-        # get_platform_by_slug = RommAPI().get_platform_by_slug()
+        get_platform_by_slug = RommAPI().get_platform_by_slug()
         # print(f"Get platform by slug response: {get_platform_by_slug}")
 
         # delete_games = RommAPI().delete_games([34691])
 
-        # filter_games = RommAPI().filter_games()
+        filter_games = RommAPI().filter_games()
         # print(f"Filter games response: {pprint.pprint(filter_games)}")

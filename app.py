@@ -3,9 +3,10 @@ import logging
 import time
 
 from src.logger_config import setup_logging
-from src.modules import romm_library_cleanup
+from src.modules import romm_library_cleanup, library_cleanup
 from src.modules.api.romm import RommAPI
 from src.modules.config_parse import LOG_FILE_PATH, ON_STARTUP, WAIT_TIME
+from src.modules.torrents import torrent_manager
 
 # Configure logging before importing other modules
 setup_logging(log_file_path=LOG_FILE_PATH)
@@ -17,9 +18,9 @@ def test():
 
 
 def run():
+    torrent_manager()
+    library_cleanup.run()
     romm_library_cleanup.run()
-    # torrent_manager()
-    # post_library_cleanup()
 
 def main():
     """Main application loop that runs on schedule."""

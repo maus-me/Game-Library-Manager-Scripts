@@ -12,7 +12,7 @@ from src.modules.helpers import format_size
 logger = logging.getLogger(__name__)
 
 
-def post_library_cleanup():
+def run():
     """
     Perform post-library cleanup tasks such as renaming folders and removing unnecessary files.
     :return:
