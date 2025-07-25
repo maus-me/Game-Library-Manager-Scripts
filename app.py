@@ -5,7 +5,7 @@ import time
 from src.logger_config import setup_logging
 from src.modules import romm_library_cleanup, library_cleanup, torrents
 from src.modules.api.romm import RommAPI
-from src.modules.config_parse import LOG_FILE_PATH, ON_STARTUP, WAIT_TIME
+from src.modules.config_parse import LOG_FILE_PATH, ON_STARTUP, WAIT_TIME, TESTING
 
 # Configure logging before importing other modules
 setup_logging(log_file_path=LOG_FILE_PATH)
