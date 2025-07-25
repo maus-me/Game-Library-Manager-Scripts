@@ -30,6 +30,7 @@ def find_empty():
     # Get the list of romms from the API
     logger.info("Removing empty directories...")
     romm_api = RommAPI()
+    platform_id = None
 
     if ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC:
         logger.info("Removing empty directories specific to the ROMM library...")
@@ -60,7 +61,10 @@ def find_missing_exe():
     logger.info("Finding ROMMs with missing executables...")
     romm_api = RommAPI()
 
-    data = romm_api.filter_games(offset=0, order_by="fs_size_bytes", order_dir="asc", group_by_meta_id=True)
+    platform_id = RommAPI().get_platform_by_slug()  # Ensure platform is set
+
+    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+                                 group_by_meta_id=True)
     game_ids = []
 
     for item in data.get('items', []):
@@ -92,7 +96,10 @@ def find_dangerous_filetypes():
     logger.info("Finding ROMMs with dangerous file types...")
     romm_api = RommAPI()
 
-    data = romm_api.filter_games(offset=0, order_by="fs_size_bytes", order_dir="asc", group_by_meta_id=True)
+    platform_id = RommAPI().get_platform_by_slug()
+
+    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+                                 group_by_meta_id=True)
     game_ids = []
 
     for item in data.get('items', []):
