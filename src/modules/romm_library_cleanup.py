@@ -17,6 +17,7 @@ def run():
         logger.info("Starting ROMM library cleanup...")
         if ROMM_EMPTY_DIRS:
             find_empty()
+            find_fragmented()
         if ROMM_MISSING_EXE:
             find_missing_exe()
         if ROMM_SCAN_DANGEROUS_FILETYPES:
@@ -49,6 +50,37 @@ def find_empty():
     if game_ids:
         logger.info(f"Deleting empty ROMMs: {len(game_ids)} found.")
         romm_api.delete_games(game_ids)
+    else:
+        logger.info("No empty ROMMs found.")
+
+
+def find_fragmented():
+    """
+    Find ROMMs that are fragmented.
+    This function will check each ROMM file for fragmentation and log the results.
+    """
+    logger.info("Finding ROMMs too small...")
+    romm_api = RommAPI()
+    platform_id = None
+
+    if ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC:
+        logger.info("Removing empty directories specific to the ROMM library...")
+        platform_id = RommAPI().get_platform_by_slug()
+
+    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+                                 group_by_meta_id=True)
+    game_ids = []
+
+    for item in data.get('items', []):
+        if item.get(
+                'fs_size_bytes') <= 1100:  # 1.1 KB, should be smaller than the smallest legitimate game file. This value specifically is what an XCI missing its actual game file is.
+            logger.info(f"Found empty ROMM: {item.get('name')} (ID: {item.get('id')})")
+            # add the game ID to the list for deletion
+            game_ids.append(item.get('id'))
+
+    if game_ids:
+        logger.info(f"Deleting empty ROMMs: {len(game_ids)} found.")
+        # romm_api.delete_games(game_ids)
     else:
         logger.info("No empty ROMMs found.")
 
