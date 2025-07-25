@@ -123,6 +123,17 @@ GOG_RECENT_GAMES_URL = get_config_value(config_parser, "gog", "gog_recent_games_
                                         "https://gog-games.to/api/web/recent-torrents")
 CACHE_REFRESH_HOURS = get_config_value(config_parser, "gog", "cache_refresh_hours", 24, "int")
 
+# Romm section
+ROMM_ENABLE = get_config_value(config_parser, "romm", "enable", False, "bool")
+ROMM_API_USERNAME = get_config_value(config_parser, "romm", "username", "admin")
+ROMM_API_PASSWORD = get_config_value(config_parser, "romm", "password", "password")
+ROMM_API_URL = get_config_value(config_parser, "romm", "url", "http://localhost:8000")
+ROMM_PLATFORM_SLUG = get_config_value(config_parser, "romm", "platform_slug", "win")
+ROMM_EMPTY_DIRS = get_config_value(config_parser, "romm", "empty_dirs", True, "bool")
+ROMM_DELETE_AFTER_IMPORT = get_config_value(config_parser, "romm", "delete_old_after_import", True, "bool")
+ROMM_SCAN_AFTER_IMPORT = get_config_value(config_parser, "romm", "scan_after_import", True, "bool")
+
+
 # Cleanup section
 REMOVE_EXTRAS = get_config_value(config_parser, "cleanup", "remove_extras", True, "bool")
 EXTRAS_PATTERNS = get_config_value(config_parser, "cleanup", "extras_patterns",
@@ -152,6 +163,17 @@ __all__ = [
     "GOG_ALL_GAMES_URL",
     "GOG_RECENT_GAMES_URL",
     "CACHE_REFRESH_HOURS",
+
+    # Romm section
+    "ROMM_ENABLE",
+    "ROMM_API_USERNAME",
+    "ROMM_API_PASSWORD",
+    "ROMM_API_URL",
+    "ROMM_PLATFORM_SLUG",
+    "ROMM_EMPTY_DIRS",
+    "ROMM_DELETE_AFTER_IMPORT",
+    "ROMM_SCAN_AFTER_IMPORT",
+
 
     # Cleanup section
     "REMOVE_EXTRAS",
