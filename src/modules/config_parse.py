@@ -162,6 +162,7 @@ __all__ = [
     "QBIT_CATEGORY",
     "MAX_TORRENTS_PER_RUN",
     "DELETE_AFTER_PROCESSING",
+    "QBIT_ENABLE",
 
     # GOG section
     "GOG_ALL_GAMES_FILE",
