@@ -41,7 +41,14 @@ def find_empty():
                                  group_by_meta_id=True)
     game_ids = []
 
-    for item in data.get('items', []):
+    items = []
+
+    if isinstance(data, dict):
+        items = data.get('items', [])
+    elif isinstance(data, list):
+        items = data
+
+    for item in items:
         if item.get('fs_size_bytes') == 0:
             logger.info(f"Found empty ROMM: {item.get('name')} (ID: {item.get('id')})")
             # add the game ID to the list for deletion
@@ -71,7 +78,14 @@ def find_fragmented():
                                  group_by_meta_id=True)
     game_ids = []
 
-    for item in data.get('items', []):
+    items = []
+
+    if isinstance(data, dict):
+        items = data.get('items', [])
+    elif isinstance(data, list):
+        items = data
+
+    for item in items:
         if item.get(
                 'fs_size_bytes') <= 1100:  # 1.1 KB, should be smaller than the smallest legitimate game file. This value specifically is what an XCI missing its actual game file is.
             logger.info(f"Found fragmented ROMM: {item.get('name')} (ID: {item.get('id')})")
@@ -99,7 +113,14 @@ def find_missing_exe():
                                  group_by_meta_id=True)
     game_ids = []
 
-    for item in data.get('items', []):
+    items = []
+
+    if isinstance(data, dict):
+        items = data.get('items', [])
+    elif isinstance(data, list):
+        items = data
+
+    for item in items:
         is_exe_present = False
 
         for file in item.get('files', []):
@@ -134,7 +155,14 @@ def find_dangerous_filetypes():
                                  group_by_meta_id=True)
     game_ids = []
 
-    for item in data.get('items', []):
+    items = []
+
+    if isinstance(data, dict):
+        items = data.get('items', [])
+    elif isinstance(data, list):
+        items = data
+
+    for item in items:
         for file in item.get('files', []):
             if file.get('file_name').endswith(('.bat', '.cmd')):
                 logger.warning(f"Romm has dangerous file: {item.get('name')} (ID: {item.get('id')})")
