@@ -37,11 +37,15 @@ def find_empty():
         logger.info("Removing empty directories specific to the ROMM library...")
         platform_id = RommAPI().get_platform_by_slug()
 
-    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+    items = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
                                  group_by_meta_id=True)
     game_ids = []
 
-    for item in data.get('items', []):
+    if not items:
+        logger.info("No ROMs found to check for empty.")
+        return
+
+    for item in items:
         if item.get('fs_size_bytes') == 0:
             logger.info(f"Found empty ROMM: {item.get('name')} (ID: {item.get('id')})")
             # add the game ID to the list for deletion
@@ -67,11 +71,15 @@ def find_fragmented():
         logger.info("Removing fragmented directories specific to the ROMM library...")
         platform_id = RommAPI().get_platform_by_slug()
 
-    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+    items = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
                                  group_by_meta_id=True)
     game_ids = []
 
-    for item in data.get('items', []):
+    if not items:
+        logger.info("No ROMs found to check for fragmentation.")
+        return
+
+    for item in items:
         if item.get(
                 'fs_size_bytes') <= 1100:  # 1.1 KB, should be smaller than the smallest legitimate game file. This value specifically is what an XCI missing its actual game file is.
             logger.info(f"Found fragmented ROMM: {item.get('name')} (ID: {item.get('id')})")
@@ -95,11 +103,15 @@ def find_missing_exe():
 
     platform_id = RommAPI().get_platform_by_slug()  # Ensure platform is set
 
-    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+    items = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
                                  group_by_meta_id=True)
     game_ids = []
 
-    for item in data.get('items', []):
+    if not items:
+        logger.info("No ROMs found to check for missing executables.")
+        return
+
+    for item in items:
         is_exe_present = False
 
         for file in item.get('files', []):
@@ -130,11 +142,15 @@ def find_dangerous_filetypes():
 
     platform_id = RommAPI().get_platform_by_slug()
 
-    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+    items = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
                                  group_by_meta_id=True)
     game_ids = []
 
-    for item in data.get('items', []):
+    if not items:
+        logger.info("No ROMs found to check for dangerous filetypes.")
+        return
+
+    for item in items:
         for file in item.get('files', []):
             if file.get('file_name').endswith(('.bat', '.cmd')):
                 logger.warning(f"Romm has dangerous file: {item.get('name')} (ID: {item.get('id')})")
