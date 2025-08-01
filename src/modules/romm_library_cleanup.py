@@ -48,6 +48,10 @@ def find_empty():
     elif isinstance(data, list):
         items = data
 
+    if not items:
+        logger.info("No ROMMs found to check for emptiness.")
+        return
+
     for item in items:
         if item.get('fs_size_bytes') == 0:
             logger.info(f"Found empty ROMM: {item.get('name')} (ID: {item.get('id')})")
@@ -85,6 +89,10 @@ def find_fragmented():
     elif isinstance(data, list):
         items = data
 
+    if not items:
+        logger.info("No ROMMs found to check for fragmentation.")
+        return
+
     for item in items:
         if item.get(
                 'fs_size_bytes') <= 1100:  # 1.1 KB, should be smaller than the smallest legitimate game file. This value specifically is what an XCI missing its actual game file is.
@@ -119,6 +127,10 @@ def find_missing_exe():
         items = data.get('items', [])
     elif isinstance(data, list):
         items = data
+
+    if not items:
+        logger.info("No ROMMs found to check for missing executables.")
+        return
 
     for item in items:
         is_exe_present = False
@@ -161,6 +173,10 @@ def find_dangerous_filetypes():
         items = data.get('items', [])
     elif isinstance(data, list):
         items = data
+
+    if not items:
+        logger.info("No ROMMs found to check for dangerous file types.")
+        return
 
     for item in items:
         for file in item.get('files', []):
