@@ -19,6 +19,7 @@ import time
 from typing import Optional
 
 import qbittorrentapi
+from qbittorrentapi import Client
 
 # Load modules with explicit imports
 from src.modules.config_parse import (
@@ -36,7 +37,7 @@ MAX_RETRIES = 3
 RETRY_DELAY = 5
 
 
-def get_qbittorrent_client() -> qbittorrentapi.Client:
+def get_qbittorrent_client() -> Client | bool:
     """
     Initialize and return a qBittorrent client.
     
@@ -46,9 +47,13 @@ def get_qbittorrent_client() -> qbittorrentapi.Client:
     Raises:
         qbittorrentapi.LoginFailed: If authentication fails
     """
-    client = qbittorrentapi.Client(**conn_info)
-    client.auth_log_in()
-    return client
+    try:
+        client = qbittorrentapi.Client(**conn_info)
+        client.auth_log_in()
+        return client
+    except qbittorrentapi.APIConnectionError as e:
+        logger.error(f"Failed to connect to qBittorrent: {e}")
+        return False
 
 
 def qbit_preflight() -> bool:
@@ -60,9 +65,14 @@ def qbit_preflight() -> bool:
     """
     try:
         client = get_qbittorrent_client()
-        logger.info(f"qBittorrent App Version: {client.app.version}")
-        logger.info(f"qBittorrent Web API: {client.app.web_api_version}")
-        return True
+
+        if client:
+            logger.info(f"qBittorrent App Version: {client.app.version}")
+            logger.info(f"qBittorrent Web API: {client.app.web_api_version}")
+            return True
+        else:
+            return False
+
     except qbittorrentapi.LoginFailed as e:
         logger.error(f"qBittorrent Login failed: {e}")
         return False
@@ -82,6 +92,7 @@ def torrent_manager():
         None
     """
     try:
+
         client = get_qbittorrent_client()
 
         # Get all completed torrents in the category
@@ -126,7 +137,7 @@ def torrent_manager():
     except qbittorrentapi.APIConnectionError as e:
         logger.error(f"qBittorrent API connection error: {e}")
     except Exception as e:
-        logger.error(f"Unexpected error in run(): {e}")
+        logger.error(f"Unexpected error in torrent manager: {e}")
 
 
 def move_torrent_folder(source: str, destination: str) -> bool:
