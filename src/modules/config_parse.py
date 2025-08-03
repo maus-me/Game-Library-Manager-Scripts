@@ -37,7 +37,7 @@ def load_config(config_paths: List[str] = None) -> configparser.ConfigParser:
         configparser.ConfigParser: ConfigParser object with loaded configuration
     """
     if config_paths is None:
-        config_paths = ["config_hidden.cfg", "config.cfg"]
+        config_paths = ["config/config_hidden.cfg", "config/config.cfg"]
 
     config_parser = create_config_parser()
 
