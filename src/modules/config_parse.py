@@ -8,6 +8,7 @@ It provides access to configuration values through exported variables and functi
 import configparser
 import logging
 import os
+from configparser import ConfigParser
 from typing import Any, List
 
 # Set up logger
@@ -26,7 +27,7 @@ def create_config_parser() -> configparser.ConfigParser:
     return parser
 
 
-def load_config(config_paths: List[str] = None) -> configparser.ConfigParser:
+def load_config(config_paths: List[str] = None) -> ConfigParser | bool:
     """
     Load configuration from specified paths or default paths.
 
@@ -37,7 +38,7 @@ def load_config(config_paths: List[str] = None) -> configparser.ConfigParser:
         configparser.ConfigParser: ConfigParser object with loaded configuration
     """
     if config_paths is None:
-        config_paths = ["config/config_hidden.cfg", "config/config.cfg"]
+        config_paths = [os.path.join("config", "config_hidden.cfg"), os.path.join("config", "config.cfg")]
 
     config_parser = create_config_parser()
 
