@@ -186,6 +186,15 @@ class RommAPI:
         if limit is not None:
             params['limit'] = limit
 
+        if offset is not None:
+            params['offset'] = offset
+
+        if order_by is not None:
+            params['order_by'] = order_by
+
+        if order_dir is not None:
+            params['order_dir'] = order_dir
+
         params.update(kwargs)
 
         return self._request("GET", "/api/roms", params=params)
