@@ -8,7 +8,7 @@ including torrent management, library cleanup, and logging.
 - Automated torrent management and post-processing
 - Game library cleanup and organization
 - Configurable logging with log rotation
-- Customizable settings via `config.cfg`
+- Customizable settings via `config/config.cfg`
 - Periodic execution with configurable wait time
 
 ## How to Run
