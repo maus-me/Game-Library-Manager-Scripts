@@ -21,7 +21,7 @@ including torrent management, library cleanup, and logging.
    ```
 
 2. **Configure the application**  
-   Edit `config.cfg` to set your paths and preferences.
+   Edit `config/config.cfg` to set your paths and preferences.
 
 3. **Run the application**:
    ```
@@ -34,10 +34,10 @@ including torrent management, library cleanup, and logging.
    ```
    docker run -d \
      --name romm-gog-custodian \
-     -v /path/to/your/config.cfg:/app/src/config.cfg \
      -v /path/to/your/library:/data/library \
      -v /path/to/your/torrents:/data/torrent \
      -v /path/to/your/logs:/app/logs \
+     -v /path/to/your/config:/app/config \
      ghcr.io/maus-me/romm-gog-custodian:latest
    ```
 
