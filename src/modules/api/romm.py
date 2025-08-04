@@ -3,6 +3,9 @@ import logging
 from typing import Dict, List, Optional
 
 import requests
+from requests.adapters import HTTPAdapter
+from requests.exceptions import ConnectionError, Timeout, RequestException
+from urllib3.util.retry import Retry
 
 from src.modules.config_parse import ROMM_API_PASSWORD, ROMM_API_USERNAME, ROMM_API_URL, ROMM_PLATFORM_SLUG
 
@@ -17,6 +20,20 @@ class RommAPI:
         self.slug = ROMM_PLATFORM_SLUG
         self.base_url = ROMM_API_URL
         self.headers = self._create_auth_headers()
+        self._setup_session()
+
+    def _setup_session(self):
+        """Configure session with retry strategy and timeouts."""
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["HEAD", "GET", "OPTIONS", "POST", "DELETE"]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+        self.session.timeout = 30
 
     def _create_auth_headers(self) -> Dict[str, str]:
         """Create authentication headers using Basic Auth."""
@@ -28,7 +45,7 @@ class RommAPI:
 
     def _request(self, method, endpoint, **kwargs):
         """
-        Send a request to the ROMM API.
+        Send a request to the ROMM API with comprehensive error handling.
 
         Args:
             method: HTTP method to use
@@ -36,10 +53,11 @@ class RommAPI:
             **kwargs: Additional arguments to pass to requests.request
 
         Returns:
-            JSON response data or None if no content
+            JSON response data or None if no content or error
 
         Raises:
-            requests.RequestException: If the request fails
+            ConnectionError: If connection cannot be established
+            RequestException: For other request-related errors
         """
         url = f"{self.base_url}{endpoint}"
         try:
@@ -49,14 +67,28 @@ class RommAPI:
             else:
                 kwargs['headers'] = self.headers
 
+            # Set timeout if not provided
+            if 'timeout' not in kwargs:
+                kwargs['timeout'] = 30
+
             resp = self.session.request(method, url, **kwargs)
             resp.raise_for_status()
             if resp.content:
                 return resp.json()
             return None
-        except requests.RequestException as e:
+        except ConnectionError as e:
+            logger.error(f"Connection failed to ROMM API: {url} - {e}")
+            logger.error("Check network connectivity and ROMM_API_URL configuration")
+            return None
+        except Timeout as e:
+            logger.error(f"Request timeout to ROMM API: {url} - {e}")
+            return None
+        except RequestException as e:
             logger.error(f"Request failed: {method} {url} - {e}")
-            raise
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error during API request: {e}")
+            return None
 
     def delete_games(self, game_ids: List[int]) -> Optional[Dict]:
         """
@@ -198,4 +230,3 @@ class RommAPI:
         params.update(kwargs)
 
         return self._request("GET", "/api/roms", params=params)
-

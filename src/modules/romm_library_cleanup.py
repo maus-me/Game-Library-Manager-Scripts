@@ -15,14 +15,17 @@ def run():
     """
     if ROMM_ENABLE:
         logger.info("Starting ROMM library cleanup...")
-        if ROMM_EMPTY_DIRS:
-            find_empty()
-            find_fragmented()
-        if ROMM_MISSING_EXE:
-            find_missing_exe()
-        if ROMM_SCAN_DANGEROUS_FILETYPES:
-            find_dangerous_filetypes()
-        logger.info("ROMM library cleanup completed.")
+        try:
+            if ROMM_EMPTY_DIRS:
+                find_empty()
+                find_fragmented()
+            if ROMM_MISSING_EXE:
+                find_missing_exe()
+            if ROMM_SCAN_DANGEROUS_FILETYPES:
+                find_dangerous_filetypes()
+            logger.info("ROMM library cleanup completed.")
+        except Exception as e:
+            logger.error(f"Error during ROMM library cleanup: {e}")
     else:
         logger.info("ROMM library cleanup is disabled in the configuration. Skipping...")
 
@@ -30,39 +33,50 @@ def run():
 def find_empty():
     # Get the list of romms from the API
     logger.info("Removing empty directories...")
-    romm_api = RommAPI()
-    platform_id = None
+    try:
+        romm_api = RommAPI()
+        platform_id = None
 
-    if ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC:
-        logger.info("Removing empty directories specific to the ROMM library...")
-        platform_id = RommAPI().get_platform_by_slug()
+        if ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC:
+            logger.info("Removing empty directories specific to the ROMM library...")
+            platform_id = RommAPI().get_platform_by_slug()
+            if platform_id is None:
+                logger.warning("Could not retrieve platform ID, continuing with all platforms")
 
-    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
-                                 group_by_meta_id=True)
-    game_ids = []
+        data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+                                     group_by_meta_id=True)
 
-    items = []
+        if data is None:
+            logger.error("Failed to retrieve games from ROMM API")
+            return
 
-    if isinstance(data, dict):
-        items = data.get('items', [])
-    elif isinstance(data, list):
-        items = data
+        game_ids = []
+        items = []
 
-    if not items:
-        logger.info("No ROMMs found to check for emptiness.")
-        return
+        if isinstance(data, dict):
+            items = data.get('items', [])
+        elif isinstance(data, list):
+            items = data
 
-    for item in items:
-        if item.get('fs_size_bytes') == 0:
-            logger.info(f"Found empty ROMM: {item.get('name')} (ID: {item.get('id')})")
-            # add the game ID to the list for deletion
-            game_ids.append(item.get('id'))
+        if not items:
+            logger.info("No ROMMs found to check for emptiness.")
+            return
 
-    if game_ids:
-        logger.info(f"Deleting empty ROMMs: {len(game_ids)} found.")
-        romm_api.delete_games(game_ids)
-    else:
-        logger.info("No empty ROMMs found.")
+        for item in items:
+            if item.get('fs_size_bytes') == 0:
+                logger.info(f"Found empty ROMM: {item.get('name')} (ID: {item.get('id')})")
+                # add the game ID to the list for deletion
+                game_ids.append(item.get('id'))
+
+        if game_ids:
+            logger.info(f"Deleting empty ROMMs: {len(game_ids)} found.")
+            result = romm_api.delete_games(game_ids)
+            if result is None:
+                logger.error("Failed to delete empty ROMMs")
+        else:
+            logger.info("No empty ROMMs found.")
+    except Exception as e:
+        logger.error(f"Error in find_empty: {e}")
 
 
 def find_fragmented():
@@ -71,40 +85,49 @@ def find_fragmented():
     This function will check each ROMM file for fragmentation and log the results.
     """
     logger.info("Finding ROMMs too small...")
-    romm_api = RommAPI()
-    platform_id = None
+    try:
+        romm_api = RommAPI()
+        platform_id = None
 
-    if ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC:
-        logger.info("Removing fragmented directories specific to the ROMM library...")
-        platform_id = RommAPI().get_platform_by_slug()
+        if ROMM_EMPTY_DIRS_LIBRARY_SPECIFIC:
+            logger.info("Removing fragmented directories specific to the ROMM library...")
+            platform_id = RommAPI().get_platform_by_slug()
+            if platform_id is None:
+                logger.warning("Could not retrieve platform ID, continuing with all platforms")
 
-    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
-                                 group_by_meta_id=True)
-    game_ids = []
+        data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+                                     group_by_meta_id=True)
 
-    items = []
+        if data is None:
+            logger.error("Failed to retrieve games from ROMM API")
+            return
 
-    if isinstance(data, dict):
-        items = data.get('items', [])
-    elif isinstance(data, list):
-        items = data
+        game_ids = []
+        items = []
 
-    if not items:
-        logger.info("No ROMMs found to check for fragmentation.")
-        return
+        if isinstance(data, dict):
+            items = data.get('items', [])
+        elif isinstance(data, list):
+            items = data
 
-    for item in items:
-        if item.get(
-                'fs_size_bytes') <= 1100:  # 1.1 KB, should be smaller than the smallest legitimate game file. This value specifically is what an XCI missing its actual game file is.
-            logger.info(f"Found fragmented ROMM: {item.get('name')} (ID: {item.get('id')})")
-            # add the game ID to the list for deletion
-            game_ids.append(item.get('id'))
+        if not items:
+            logger.info("No ROMMs found to check for fragmentation.")
+            return
 
-    if game_ids:
-        logger.info(f"Deleting empty ROMMs: {len(game_ids)} found.")
-        romm_api.delete_games(game_ids)
-    else:
-        logger.info("No empty ROMMs found.")
+        for item in items:
+            if item.get(
+                    'fs_size_bytes') <= 1100:  # 1.1 KB, should be smaller than the smallest legitimate game file. This value specifically is what an XCI missing its actual game file is.
+                logger.info(f"Found fragmented ROMM: {item.get('name')} (ID: {item.get('id')})")
+                # add the game ID to the list for deletion
+                game_ids.append(item.get('id'))
+
+        if game_ids:
+            logger.info(f"Deleting empty ROMMs: {len(game_ids)} found.")
+            romm_api.delete_games(game_ids)
+        else:
+            logger.info("No empty ROMMs found.")
+    except Exception as e:
+        logger.error(f"Error in find_fragmented: {e}")
 
 
 def find_missing_exe():
@@ -113,42 +136,52 @@ def find_missing_exe():
     This function will check each ROMM file for the presence of an executable file.
     """
     logger.info("Finding ROMMs with missing executables...")
-    romm_api = RommAPI()
+    try:
+        romm_api = RommAPI()
 
-    platform_id = RommAPI().get_platform_by_slug()  # Ensure platform is set
+        platform_id = RommAPI().get_platform_by_slug()  # Ensure platform is set
+        if platform_id is None:
+            logger.error("Could not retrieve platform ID, skipping missing exe check")
+            return
 
-    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
-                                 group_by_meta_id=True)
-    game_ids = []
+        data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+                                     group_by_meta_id=True)
 
-    items = []
+        if data is None:
+            logger.error("Failed to retrieve games from ROMM API")
+            return
 
-    if isinstance(data, dict):
-        items = data.get('items', [])
-    elif isinstance(data, list):
-        items = data
+        game_ids = []
+        items = []
 
-    if not items:
-        logger.info("No ROMMs found to check for missing executables.")
-        return
+        if isinstance(data, dict):
+            items = data.get('items', [])
+        elif isinstance(data, list):
+            items = data
 
-    for item in items:
-        is_exe_present = False
+        if not items:
+            logger.info("No ROMMs found to check for missing executables.")
+            return
 
-        for file in item.get('files', []):
-            if file.get('file_name').endswith('.exe'):
-                is_exe_present = True
-                break
+        for item in items:
+            is_exe_present = False
 
-        if not is_exe_present:
-            logger.info(f"Romm missing executable: {item.get('name')} (ID: {item.get('id')})")
-            game_ids.append(item.get('id'))
+            for file in item.get('files', []):
+                if file.get('file_name').endswith('.exe'):
+                    is_exe_present = True
+                    break
 
-    if game_ids:
-        logger.info(f"Deleting ROMMs with missing executables: {len(game_ids)} found.")
-        romm_api.delete_games(game_ids)
-    else:
-        logger.info("No ROMMs with missing executables found.")
+            if not is_exe_present:
+                logger.info(f"Romm missing executable: {item.get('name')} (ID: {item.get('id')})")
+                game_ids.append(item.get('id'))
+
+        if game_ids:
+            logger.info(f"Deleting ROMMs with missing executables: {len(game_ids)} found.")
+            romm_api.delete_games(game_ids)
+        else:
+            logger.info("No ROMMs with missing executables found.")
+    except Exception as e:
+        logger.error(f"Error in find_missing_exe: {e}")
 
 
 def find_dangerous_filetypes():
@@ -159,33 +192,43 @@ def find_dangerous_filetypes():
     It is recommended to add more file types as needed and to leverage a more comprehensive security solution like ClamAV.
     """
     logger.info("Finding ROMMs with dangerous file types...")
-    romm_api = RommAPI()
+    try:
+        romm_api = RommAPI()
 
-    platform_id = RommAPI().get_platform_by_slug()
+        platform_id = RommAPI().get_platform_by_slug()
+        if platform_id is None:
+            logger.error("Could not retrieve platform ID, skipping dangerous filetype check")
+            return
 
-    data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
-                                 group_by_meta_id=True)
-    game_ids = []
+        data = romm_api.filter_games(platform_id=platform_id, offset=0, order_by="fs_size_bytes", order_dir="asc",
+                                     group_by_meta_id=True)
 
-    items = []
+        if data is None:
+            logger.error("Failed to retrieve games from ROMM API")
+            return
 
-    if isinstance(data, dict):
-        items = data.get('items', [])
-    elif isinstance(data, list):
-        items = data
+        game_ids = []
+        items = []
 
-    if not items:
-        logger.info("No ROMMs found to check for dangerous file types.")
-        return
+        if isinstance(data, dict):
+            items = data.get('items', [])
+        elif isinstance(data, list):
+            items = data
 
-    for item in items:
-        for file in item.get('files', []):
-            if file.get('file_name').endswith(('.bat', '.cmd')):
-                logger.warning(f"Romm has dangerous file: {item.get('name')} (ID: {item.get('id')})")
-                game_ids.append(item.get('id'))
-                break
+        if not items:
+            logger.info("No ROMMs found to check for dangerous file types.")
+            return
 
-    if game_ids:
-        logger.info(f"ROMMs with dangerous files: {len(game_ids)} found.")
-    else:
-        logger.info("No ROMMs with dangerous files found.")
+        for item in items:
+            for file in item.get('files', []):
+                if file.get('file_name').endswith(('.bat', '.cmd')):
+                    logger.warning(f"Romm has dangerous file: {item.get('name')} (ID: {item.get('id')})")
+                    game_ids.append(item.get('id'))
+                    break
+
+        if game_ids:
+            logger.info(f"ROMMs with dangerous files: {len(game_ids)} found.")
+        else:
+            logger.info("No ROMMs with dangerous files found.")
+    except Exception as e:
+        logger.error(f"Error in find_dangerous_filetypes: {e}")
